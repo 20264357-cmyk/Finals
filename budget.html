@@ -30,12 +30,6 @@
                 <a class="nav-link" href="debt.html"><span class="nav-icon">▤</span>Debt Management</a>
                 <a class="nav-link" href="calendar.html"><span class="nav-icon">▦</span>Financial Calendar</a>
             </nav>
-            <div class="nav-label nav-label-spaced">Financial Tools</div>
-            <nav class="nav-list">
-                <a class="nav-link" href="health.html"><span class="nav-icon">♥</span>Financial Health</a>
-                <a class="nav-link" href="calculators.html"><span class="nav-icon">⌗</span>Calculators</a>
-                <a class="nav-link" href="challenges.html"><span class="nav-icon">★</span>Savings Challenges</a>
-            </nav>
             <div class="nav-label nav-label-spaced">Resources</div>
             <nav class="nav-list">
                 <a class="nav-link" href="guides.html"><span class="nav-icon">▧</span>Financial Guides</a>
@@ -175,6 +169,17 @@
                         <div class="category-list" id="budget-limits"></div>
                     </article>
 
+                </section>
+
+                <section class="panel" style="margin-bottom:18px">
+                    <div class="panel-heading"><div><h2>Quick budget calculator</h2><p class="panel-subtitle">Estimate how much of your monthly income to set aside as savings.</p></div></div>
+                    <form id="budget-calc-form" class="form-grid">
+                        <div class="form-field"><label for="calc-income">Monthly income (₱)</label><input id="calc-income" type="number" min="0" step=".01" placeholder="15000" required></div>
+                        <div class="form-field"><label for="calc-save-rate">Savings percentage</label><input id="calc-save-rate" type="number" min="0" max="100" value="20" required></div>
+                        <div class="form-field full"><button class="btn btn-primary" type="submit">Calculate breakdown</button></div>
+                    </form>
+                    <div id="budget-calc-result" class="grid equal-col" style="margin-top:16px"></div>
+                    <p class="panel-subtitle">This is an estimate only. Adjust the amount to cover your needs first.</p>
                 </section>
 
                 <section class="panel" style="margin-bottom:18px">
