@@ -1,7 +1,10 @@
+// Wealthness JavaScript: Controls interactive features and shared data used by all pages.
 
 // Shared browser-storage key used by every Wealthness page.
+// Storage key: Names the browser storage entry where Wealthness saves its data.
 const STORAGE_KEY = "wealthnessData_v2";
 
+// Formatting helpers: Keep money amounts and dates consistent throughout the website.
 const money = n => new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP",maximumFractionDigits:2}).format(Number(n)||0);
 // Use the browser’s local date so dates stay correct in the user’s timezone.
 const todayISO = () => formatLocalDate(new Date());
@@ -9,6 +12,7 @@ const uid = () => "w_" + Date.now().toString(36) + Math.random().toString(36).sl
 const escapeHTML = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 // One shared data object powers every page. Pages read the parts they need
 // and save changes here so the dashboard and other summaries stay in sync.
+// Default data: Provides an empty starting structure when there are no saved records.
 const defaultData = () => ({
     transactions:[],
     budgets:{},
@@ -24,6 +28,8 @@ const defaultData = () => ({
 });
 
 // Load saved records when the app opens. Defaults keep older backups compatible.
+// Data loading: Reads previously saved records from browser Local Storage.
+// Helper function: Performs a task used by one or more website features.
 function loadData(){
     try {
         const raw=JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -42,42 +48,53 @@ function loadData(){
     }
 }
 
+// Shared data: Holds records used by the Dashboard, Budget, Savings, Debt, and Calendar pages.
 let data=loadData();
 
 // Persist the shared data object in this browser. This is local storage, not a bank connection.
+// Data saving: Stores the latest shared records in browser Local Storage.
+// Helper function: Performs a task used by one or more website features.
 function save(){
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
 
+// Helper function: Performs a task used by one or more website features.
 function byId(id){
     return document.getElementById(id);
 }
 
+// Helper function: Performs a task used by one or more website features.
 function val(id){
     return byId(id)?.value?.trim() ?? "";
 }
 
+// Helper function: Performs a task used by one or more website features.
 function setText(id,text){
     if(byId(id))byId(id).textContent=text;
 }
 
+// Helper function: Performs a task used by one or more website features.
 function monthKey(date){
     return String(date||"").slice(0,7);
 }
 
+// Helper function: Performs a task used by one or more website features.
 function currentMonth(){
     return todayISO().slice(0,7);
 }
 
 // Reuse one month filter so dashboard totals, insights, and health summaries agree.
+// Helper function: Performs a task used by one or more website features.
 function monthTransactions(){
     return data.transactions.filter(t=>monthKey(t.date)===currentMonth());
 }
 
+// Helper function: Performs a task used by one or more website features.
 function sum(items,fn){
     return items.reduce((a,x)=>a+(Number(fn(x))||0),0);
 }
 
+// Helper function: Performs a task used by one or more website features.
 function totals(items){
     return {
         income:sum(items,t=>t.type==="income"?t.amount:0),
@@ -85,19 +102,23 @@ function totals(items){
     };
 }
 
+// Helper function: Performs a task used by one or more website features.
 function availableBalance(){
     const t=totals(data.transactions);
     return t.income-t.expense;
 }
 
+// Helper function: Performs a task used by one or more website features.
 function categoryName(t){
     return t.category||"Others";
 }
 
+// Helper function: Performs a task used by one or more website features.
 function allCategories(){
     return [...new Set(["Food","Housing","Transportation","Education","Bills","Personal","Salary","Allowance","Others",...(data.customCategories||[])])];
 }
 
+// Helper function: Performs a task used by one or more website features.
 function populateCategoryOptions(){
     ["transaction-category","recurring-category","planned-category"].forEach(id=>{
         const select=byId(id);
@@ -108,16 +129,19 @@ function populateCategoryOptions(){
     });
 }
 
+// Helper function: Performs a task used by one or more website features.
 function formatLocalDate(date){
     const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");
     return `${y}-${m}-${d}`;
 }
 
+// Helper function: Performs a task used by one or more website features.
 function parseLocalDate(value){
     const [y,m,d]=String(value||"").split("-").map(Number);
     return y&&m&&d?new Date(y,m-1,d):null;
 }
 
+// Helper function: Performs a task used by one or more website features.
 function advanceDate(value,frequency){
     const date=parseLocalDate(value);
     if(!date)return value;
@@ -128,6 +152,7 @@ function advanceDate(value,frequency){
 }
 
 // When a recurring date arrives, create its transaction and move its next date forward.
+// Helper function: Performs a task used by one or more website features.
 function processRecurringTransactions(){
     let changed=false;
     const today=todayISO();
@@ -152,6 +177,7 @@ function processRecurringTransactions(){
     if(changed)save();
 }
 
+// Helper function: Performs a task used by one or more website features.
 function renderRecurring(){
     const el=byId("recurring-list");
     if(!el)return;
@@ -165,6 +191,8 @@ function renderRecurring(){
 }
 
 // The calendar combines planned payments, debt due dates, and recurring entries.
+// Financial calendar: Displays upcoming and recorded financial dates.
+// Helper function: Performs a task used by one or more website features.
 function renderCalendar(){
     const el=byId("calendar-events");
     if(!el)return;
@@ -191,6 +219,7 @@ function renderCalendar(){
     }).join(""):`<div class="empty-state">Nothing scheduled yet. Add a planned payment or record a debt due date.</div>`;
 }
 
+// Helper function: Performs a task used by one or more website features.
 function renderInsights(){
     const el=byId("spending-insights");
     if(!el)return;
@@ -210,6 +239,7 @@ function renderInsights(){
         <article class="stat-card"><div class="stat-label">Spending comparison</div><div class="stat-value">${money(current.expense)}</div><div class="stat-note">${changeText}</div></article>`;
 }
 
+// Helper function: Performs a task used by one or more website features.
 function toast(message){
     const el=byId("toast");
     if(!el)return;
@@ -220,6 +250,8 @@ function toast(message){
 }
 
 // Dashboard reads the shared records and refreshes its totals, chart, spending, and goals.
+// Dashboard: Displays the user's balance, income, expenses, and financial overview.
+// Helper function: Performs a task used by one or more website features.
 function renderOverview(){
     const all=totals(data.transactions),m=totals(monthTransactions());
 
@@ -244,6 +276,7 @@ function renderOverview(){
 }
 
 // Build six local calendar months; matching YYYY-MM keys avoids UTC month shifts.
+// Helper function: Performs a task used by one or more website features.
 function renderChart(){
     const el=byId("cashflow-chart");
     if(!el)return;
@@ -263,6 +296,7 @@ function renderChart(){
     el.innerHTML=months.map(m=>`<div class="chart-month"><div class="chart-bars"><div class="chart-bar" title="Income ${money(m.income)}" style="height:${Math.max(3,m.income/max*100)}%"></div><div class="chart-bar expense" title="Expenses ${money(m.expense)}" style="height:${Math.max(3,m.expense/max*100)}%"></div></div><span class="chart-label">${m.label}</span></div>`).join("");
 }
 
+// Helper function: Performs a task used by one or more website features.
 function renderSpending(){
     const el=byId("spending-overview");
     if(!el)return;
@@ -278,6 +312,7 @@ function renderSpending(){
     el.innerHTML=sorted.length?sorted.map(([name,amount])=>`<div class="category-row"><span class="category-name">${escapeHTML(name)}</span><span class="category-amount">${money(amount)}</span><div class="progress-track"><div class="progress-fill" style="width:${total?amount/total*100:0}%"></div></div></div>`).join(""):`<div class="empty-state">Your spending categories will appear here once you add expenses.</div>`;
 }
 
+// Helper function: Performs a task used by one or more website features.
 function renderOverviewGoals(){
     const el=byId("savings-overview");
     if(!el)return;
@@ -288,6 +323,8 @@ function renderOverviewGoals(){
 }
 
 // Budget page lists the same transactions used by the dashboard and health overview.
+// Budget and expenses: Displays transactions, spending limits, and expense summaries.
+// Helper function: Performs a task used by one or more website features.
 function renderBudget(){
     const list=byId("transaction-list");
     if(!list)return;
@@ -307,6 +344,7 @@ function renderBudget(){
     renderBudgets();
 }
 
+// Helper function: Performs a task used by one or more website features.
 function renderBudgets(){
     const el=byId("budget-limits");
     if(!el)return;
@@ -321,6 +359,7 @@ function renderBudgets(){
     }).join("");
 }
 
+// Helper function: Performs a task used by one or more website features.
 function resetTransactionForm(){
     const f=byId("transaction-form");
     if(!f)return;
@@ -332,6 +371,7 @@ function resetTransactionForm(){
     byId("cancel-edit-button")?.classList.add("hidden");
 }
 
+// Helper function: Performs a task used by one or more website features.
 function handleTransactionSubmit(e){
     e.preventDefault();
 
@@ -361,6 +401,7 @@ function handleTransactionSubmit(e){
     toast(id?"Transaction updated.":"Transaction saved.");
 }
 
+// Helper function: Performs a task used by one or more website features.
 function editTransaction(id){
     const t=data.transactions.find(x=>x.id===id);
     if(!t)return;
@@ -378,6 +419,8 @@ function editTransaction(id){
 }
 
 // Savings goals are shared with the dashboard and Financial Health summary.
+// Savings goals: Displays goals, saved amounts, and progress toward each target.
+// Helper function: Performs a task used by one or more website features.
 function renderSavings(){
     const el=byId("goals-list");
     if(!el)return;
@@ -391,6 +434,7 @@ function renderSavings(){
 }
 
 // Calculator estimates use entered values or recorded income/essential expenses as defaults.
+// Helper function: Performs a task used by one or more website features.
 function updatePlanner(){
     const income=Number(data.planner.income)||totals(monthTransactions()).income;
     const essential=Number(data.planner.essential)||sum(monthTransactions().filter(t=>t.type==="expense"&&["Housing","Food","Transportation","Education","Bills"].includes(t.category)),t=>t.amount);
@@ -412,6 +456,8 @@ function updatePlanner(){
 }
 
 // Debt balances feed the debt page, planner summary, health overview, and calendar due dates.
+// Debt management: Displays recorded debts and their remaining balances.
+// Helper function: Performs a task used by one or more website features.
 function renderDebt(){
     const el=byId("debt-list");
     if(!el)return;
@@ -425,6 +471,8 @@ function renderDebt(){
 }
 
 // After a change, redraw every page section that may depend on the shared data.
+// Refresh: Re-renders page sections that depend on shared financial data.
+// Helper function: Performs a task used by one or more website features.
 function refresh(){
     renderOverview();
     renderBudget();
@@ -438,6 +486,8 @@ function refresh(){
     renderChallenge();
 }
 
+// Settings: Displays user preferences and data backup options.
+// Helper function: Performs a task used by one or more website features.
 function renderSettings(){
     const el=byId("accounts-list");
     if(!el)return;
@@ -448,6 +498,7 @@ function renderSettings(){
 }
 
 
+// Helper function: Performs a task used by one or more website features.
 function initTheme(){
  const saved=localStorage.getItem("wealthnessTheme");
  if(saved==="dark")document.body.classList.add("dark-mode");
@@ -457,6 +508,8 @@ function initTheme(){
  byId("settings-theme-toggle")?.addEventListener("click",toggle);update();
 }
 // This is an educational estimate calculated from saved transactions, budgets, goals, and debts.
+// Financial health: Estimates financial status using saved income, expenses, savings, and debts.
+// Helper function: Performs a task used by one or more website features.
 function renderHealth(){
  if(!byId("health-stats"))return;
  const m=totals(monthTransactions()),all=totals(data.transactions),saved=sum(data.goals,g=>g.saved),targets=sum(data.goals,g=>g.target);
@@ -473,12 +526,16 @@ function renderHealth(){
  byId("health-tips").innerHTML=tips.map(t=>`<div class="health-tip">${escapeHTML(t)}</div>`).join("");
 }
 // Calculators display estimates only; they do not change saved transactions or goal balances.
+// Calculators: Estimates savings, emergency funds, and budget plans without changing saved records.
+// Helper function: Performs a task used by one or more website features.
 function initCalculators(){
  byId("savings-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const target=Number(val("calc-target")),current=Number(val("calc-current"))||0,months=Number(val("calc-months"));if(target<=0||months<=0){toast("Enter valid goal details.");return}byId("savings-calc-result").innerHTML=`<small>Estimated amount to save each month</small><strong>${money(Math.max(0,target-current)/months)}</strong><p class="panel-subtitle">${money(Math.max(0,target-current))} remaining over ${months} month(s).</p>`});
  byId("emergency-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const expenses=Number(val("calc-essentials")),months=Number(val("calc-emergency-months"));if(expenses<0){toast("Enter a valid expense amount.");return}byId("emergency-calc-result").innerHTML=`<small>Estimated emergency fund target</small><strong>${money(expenses*months)}</strong><p class="panel-subtitle">Based on ${months} month(s) of essential expenses.</p>`});
  byId("budget-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const income=Number(val("calc-income")),rate=Number(val("calc-save-rate"));if(income<0||rate<0||rate>100){toast("Enter valid income and savings percentage.");return}const savings=income*rate/100;byId("budget-calc-result").innerHTML=`<article class="stat-card"><div class="stat-label">Suggested savings</div><div class="stat-value">${money(savings)}</div></article><article class="stat-card"><div class="stat-label">Remaining for expenses</div><div class="stat-value">${money(income-savings)}</div></article>`});
 }
 // Challenge check-ins are stored with the same shared data and survive page reloads.
+// Savings challenge: Displays the selected challenge and saved daily check-ins.
+// Helper function: Performs a task used by one or more website features.
 function renderChallenge(){
  const el=byId("challenge-progress");if(!el)return;const active=data.challengeState;
  if(!active){el.innerHTML='<div class="empty-state">You have not started a challenge yet. Choose one above to begin.</div>';return}
@@ -487,6 +544,8 @@ function renderChallenge(){
 }
 
 // Set up only the controls present on the current page, then render from shared local data.
+// Page setup: Connects controls on the current page and starts the required rendering functions.
+// Helper function: Performs a task used by one or more website features.
 function initPage(){
     const page=document.body.dataset.page;
     initTheme();
@@ -882,6 +941,8 @@ function initPage(){
     refresh();
 }
 
+// Download helper: Creates a downloadable file for reports and backups.
+// Helper function: Performs a task used by one or more website features.
 function downloadBlob(blob,name){
     const a=document.createElement("a"),url=URL.createObjectURL(blob);
     a.href=url;
