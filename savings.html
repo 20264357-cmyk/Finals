@@ -1,6 +1,8 @@
+<!-- savings page: This file contains the structure and content displayed on the savings page. -->
 
 <!DOCTYPE html>
 <html lang="en">
+<!-- Head: Sets page information, title, stylesheets, and JavaScript files. -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,9 +11,11 @@
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
+<!-- Body: Contains everything visible and interactive on this page. -->
 <body data-page="savings">
     <div class="app-shell">
-        <aside class="sidebar" id="sidebar">
+        <!-- Sidebar: Shared navigation that links to the other Wealthness pages. -->
+<aside class="sidebar" id="sidebar">
             <a class="brand" href="index.html">
                 <div class="brand-mark">W</div>
                 <div>
@@ -21,7 +25,8 @@
             </a>
 
             <div class="nav-label">Main</div>
-            <nav class="nav-list">
+            <!-- Navigation links: Let users move between the website pages. -->
+<nav class="nav-list">
                 <a class="nav-link" href="index.html"><span class="nav-icon">▦</span>Overview</a>
                 <a class="nav-link" href="budget.html"><span class="nav-icon">↗</span>Budget &amp; Expenses</a>
                 <a class="nav-link active" href="savings.html"><span class="nav-icon">◎</span>Savings Goals</a>
@@ -46,7 +51,8 @@
         <div class="mobile-overlay" id="mobile-overlay"></div>
 
         <div class="main">
-            <header class="topbar">
+            <!-- Top bar: Shows the page location, current date, and quick controls. -->
+<header class="topbar">
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button>
                     <div class="breadcrumb">Workspace <strong>Savings Goals</strong></div>
@@ -57,7 +63,8 @@
                 </div>
             </header>
 
-            <main class="content">
+            <!-- Main content: Holds the main information and tools for this page. -->
+<main class="content">
                 <div class="page-heading">
                     <div>
                         <div class="eyebrow">WEALTHNESS WORKSPACE</div>
@@ -66,6 +73,7 @@
                     </div>
                 </div>
 
+                <!-- planner highlight: Groups related savings content and controls. -->
                 <section class="planner-highlight">
                     <div>
                         <div class="eyebrow" style="color:#bce5cb">SMART SAVINGS PLANNER</div>
@@ -78,6 +86,7 @@
                     </div>
                 </section>
 
+                <!-- grid two col: Groups related savings content and controls. -->
                 <section class="grid two-col">
                     <article class="panel">
                         <div class="panel-heading">
@@ -87,6 +96,7 @@
                             </div>
                         </div>
 
+                        <!-- planner form: Collects information before JavaScript processes it. -->
                         <form id="planner-form">
                             <div class="form-grid">
                                 <div class="form-field">
@@ -162,6 +172,7 @@
                     </article>
                 </section>
 
+                <!-- grid two col: Groups related savings content and controls. -->
                 <section class="grid two-col">
                     <article class="panel">
                         <div class="panel-heading">
@@ -171,6 +182,7 @@
                             </div>
                         </div>
 
+                        <!-- goal form: Collects information before JavaScript processes it. -->
                         <form id="goal-form">
                             <div class="form-grid">
                                 <div class="form-field">
@@ -210,6 +222,7 @@
                     </article>
                 </section>
 
+                <!-- panel: Groups related savings content and controls. -->
                 <section class="panel">
                     <div class="panel-heading">
                         <div>
@@ -219,16 +232,20 @@
                     </div>
                     <div class="grid equal-col" id="goals-list"></div>
                 </section>
+                <!-- grid two col: Groups related savings content and controls. -->
                 <section class="grid two-col" style="margin-top:18px">
                     <article class="panel"><div class="panel-heading"><div><h2>Savings goal calculator</h2><p class="panel-subtitle">Estimate how much to save each month to reach a target.</p></div></div>
+                        <!-- savings calc form: Collects information before JavaScript processes it. -->
                         <form id="savings-calc-form"><div class="form-field"><label for="calc-target">Savings target (₱)</label><input id="calc-target" type="number" min="1" step=".01" placeholder="10000" required></div><div class="form-field" style="margin-top:12px"><label for="calc-current">Already saved (₱)</label><input id="calc-current" type="number" min="0" step=".01" value="0"></div><div class="form-field" style="margin-top:12px"><label for="calc-months">Months to reach your goal</label><input id="calc-months" type="number" min="1" max="600" value="10" required></div><div class="form-actions"><button class="btn btn-primary" type="submit">Calculate savings</button></div></form>
                         <div class="result-box calc-result" id="savings-calc-result" aria-live="polite">Enter your goal details to see an estimate.</div>
                     </article>
                     <article class="panel"><div class="panel-heading"><div><h2>Emergency fund calculator</h2><p class="panel-subtitle">Estimate a target based on essential monthly expenses.</p></div></div>
+                        <!-- emergency calc form: Collects information before JavaScript processes it. -->
                         <form id="emergency-calc-form"><div class="form-field"><label for="calc-essentials">Monthly essential expenses (₱)</label><input id="calc-essentials" type="number" min="0" step=".01" placeholder="8000" required></div><div class="form-field" style="margin-top:12px"><label for="calc-emergency-months">Number of months to cover</label><select id="calc-emergency-months"><option value="1">1 month</option><option value="3" selected>3 months</option><option value="6">6 months</option></select></div><div class="form-actions"><button class="btn btn-primary" type="submit">Calculate target</button></div></form>
                         <div class="result-box calc-result" id="emergency-calc-result" aria-live="polite">Enter your essential expenses to see an estimate.</div>
                     </article>
                 </section>
+                <!-- panel: Groups related savings content and controls. -->
                 <section class="panel" style="margin-top:18px">
                     <div class="panel-heading"><div><h2>Savings challenges</h2><p class="panel-subtitle">Build a steady habit with small, manageable check-ins.</p></div></div>
                     <div class="grid equal-col">
