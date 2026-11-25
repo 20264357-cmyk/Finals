@@ -716,7 +716,7 @@ function initPage(){
         const rows=[["date","type","description","category","amount"],...data.transactions.map(item=>[
             item.date,item.type,item.description,item.category||"Others",item.amount
         ])];
-        const csv=rows.map(row=>row.map(value=>`"${String(value??"").replace(/"/g,'""')}"`).join(",")).join("\\n");
+        const csv=rows.map(row=>row.map(value=>`"${String(value??"").replace(/"/g,'""')}"`).join(",")).join("\n");
         downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),"wealthness-financial-report.csv");
         toast("CSV report exported.");
     });
