@@ -240,7 +240,7 @@ function renderChart(){
 
     for(let i=5;i>=0;i--){
         const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-        const key=d.toISOString().slice(0,7);
+        const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
         const tx=data.transactions.filter(t=>monthKey(t.date)===key);
         const t=totals(tx);
         months.push({label:d.toLocaleDateString("en",{month:"short"}),...t});
