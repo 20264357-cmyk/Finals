@@ -1172,3 +1172,17 @@ body.dark-mode .chart-bar.expense{background:#2d9466}
 
 /* Keep the expanded navigation usable on shorter screens */
 .sidebar{overflow-y:auto;overscroll-behavior:contain}
+
+/* Integrated dashboard health summary and quick-start guide */
+.welcome-guide{display:flex;align-items:center;justify-content:space-between;gap:18px;background:linear-gradient(120deg,var(--green-50),var(--surface))}
+.welcome-guide-copy{max-width:680px}
+.health-tip-panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px;min-width:0}
+.guide-modal{width:min(100%,680px)}
+.guide-steps{display:grid;gap:14px;padding-left:22px;margin:8px 0 18px}
+.guide-steps li{padding-left:5px}
+.guide-steps strong,.guide-steps span{display:block}
+.guide-steps strong{font-size:13px;margin-bottom:4px}
+.guide-steps span{font-size:12px;color:var(--muted);line-height:1.65}
+@media(max-width:560px){.welcome-guide{align-items:flex-start;flex-direction:column}.welcome-guide .btn{width:100%}}
+body.dark-mode .welcome-guide{background:linear-gradient(120deg,#1b3025,#18271f)}
+body.dark-mode .health-tip-panel{background:var(--surface);border-color:var(--line)}
