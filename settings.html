@@ -1,6 +1,8 @@
+<!-- settings page: This file contains the structure and content displayed on the settings page. -->
 
 <!DOCTYPE html>
 <html lang="en">
+<!-- Head: Sets page information, title, stylesheets, and JavaScript files. -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,9 +11,11 @@
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
+<!-- Body: Contains everything visible and interactive on this page. -->
 <body data-page="settings">
     <div class="app-shell">
-        <aside class="sidebar" id="sidebar">
+        <!-- Sidebar: Shared navigation that links to the other Wealthness pages. -->
+<aside class="sidebar" id="sidebar">
             <a class="brand" href="index.html">
                 <div class="brand-mark">W</div>
                 <div>
@@ -21,7 +25,8 @@
             </a>
 
             <div class="nav-label">Main</div>
-            <nav class="nav-list">
+            <!-- Navigation links: Let users move between the website pages. -->
+<nav class="nav-list">
                 <a class="nav-link" href="index.html"><span class="nav-icon">▦</span>Overview</a>
                 <a class="nav-link" href="budget.html"><span class="nav-icon">↗</span>Budget &amp; Expenses</a>
                 <a class="nav-link" href="savings.html"><span class="nav-icon">◎</span>Savings Goals</a>
@@ -46,7 +51,8 @@
         <div class="mobile-overlay" id="mobile-overlay"></div>
 
         <div class="main">
-            <header class="topbar">
+            <!-- Top bar: Shows the page location, current date, and quick controls. -->
+<header class="topbar">
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button>
                     <div class="breadcrumb">Workspace <strong>Settings</strong></div>
@@ -57,7 +63,8 @@
                 </div>
             </header>
 
-            <main class="content">
+            <!-- Main content: Holds the main information and tools for this page. -->
+<main class="content">
                 <div class="page-heading">
                     <div>
                         <div class="eyebrow">WEALTHNESS WORKSPACE</div>
@@ -66,10 +73,12 @@
                     </div>
                 </div>
 
+                <!-- panel: Groups related settings content and controls. -->
                 <section class="panel" style="margin-bottom:18px">
                     <div class="panel-heading"><div><h2>Appearance</h2><p class="panel-subtitle">Choose a comfortable display theme for Wealthness.</p></div></div>
                     <div class="settings-row"><div><strong>Dark mode</strong><p>Switch between the original light theme and a darker theme.</p></div><button class="btn btn-secondary" id="settings-theme-toggle" type="button">Toggle dark mode</button></div>
                 </section>
+                <!-- grid two col: Groups related settings content and controls. -->
                 <section class="grid two-col">
                     <article class="panel">
                         <div class="panel-heading">
@@ -79,6 +88,7 @@
                             </div>
                         </div>
 
+                        <!-- profile form: Collects information before JavaScript processes it. -->
                         <form id="profile-form">
                             <div class="form-field">
                                 <label for="profile-name">Display name</label>
@@ -118,6 +128,7 @@
                     </article>
                 </section>
 
+                <!-- panel: Groups related settings content and controls. -->
                 <section class="panel" style="margin-bottom:18px">
                     <div class="panel-heading">
                         <div>
@@ -125,6 +136,7 @@
                             <p class="panel-subtitle">Create categories that match how you organize your money.</p>
                         </div>
                     </div>
+                    <!-- custom category form: Collects information before JavaScript processes it. -->
                     <form id="custom-category-form" class="toolbar">
                         <input id="custom-category-input" placeholder="e.g. School supplies" required aria-label="New category name">
                         <button class="btn btn-primary" type="submit">Add category</button>
@@ -132,6 +144,7 @@
                     <p class="panel-subtitle">Custom categories are available when recording transactions and setting budget limits.</p>
                 </section>
 
+                <!-- panel: Groups related settings content and controls. -->
                 <section class="panel" style="margin-bottom:18px">
                     <div class="panel-heading">
                         <div>
@@ -145,6 +158,7 @@
 
                     <div id="accounts-list"></div>
 
+                    <!-- account form: Collects information before JavaScript processes it. -->
                     <form id="account-form" style="margin-top:18px">
                         <div class="form-grid">
                             <div class="form-field">
@@ -170,6 +184,7 @@
                     </form>
                 </section>
 
+                <!-- panel: Groups related settings content and controls. -->
                 <section class="panel">
                     <div class="panel-heading">
                         <div>
