@@ -417,6 +417,8 @@ function refresh(){
     renderRecurring();
     renderCalendar();
     renderInsights();
+    renderHealth();
+    renderChallenge();
 }
 
 function renderSettings(){
