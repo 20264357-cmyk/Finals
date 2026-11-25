@@ -17,6 +17,7 @@ const defaultData = () => ({
     accounts:[],
     recurring:[],
     plannedPayments:[],
+    challengeState:null,
     customCategories:[],
     planner:{income:"",essential:"",rate:20,goal:"",months:12},
     settings:{name:"",currency:"PHP"}
