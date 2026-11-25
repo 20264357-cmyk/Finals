@@ -1077,3 +1077,63 @@ textarea::placeholder {
 body.modal-open {
   overflow: hidden;
 }
+
+
+/* Wealthness calendar and planning additions */
+.calendar-events {
+  display: grid;
+  gap: 10px;
+}
+.calendar-event {
+  display: grid;
+  grid-template-columns: 150px minmax(0,1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 15px;
+  background: #fff;
+}
+.calendar-date strong,
+.calendar-date span,
+.calendar-detail strong,
+.calendar-detail span {
+  display: block;
+}
+.calendar-date strong,
+.calendar-detail strong {
+  font-size: 12px;
+}
+.calendar-date span,
+.calendar-detail span {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+.calendar-amount {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.recurring-row {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.insight-category {
+  font-size: 17px;
+}
+@media(max-width:700px) {
+  .calendar-event {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+  .calendar-date,
+  .calendar-detail {
+    grid-column: 1;
+  }
+  .calendar-amount,
+  .calendar-event .btn {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
