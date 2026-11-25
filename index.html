@@ -13,7 +13,7 @@
 <body data-page="overview">
     <div class="app-shell">
 
-        <!-- Sidebar: Shared navigation that links to the other Wealthness pages. -->
+        <!-- This sidebar lets users move between the Wealthness pages. -->
 <aside class="sidebar" id="sidebar">
             <a class="brand" href="index.html">
                 <div class="brand-mark">W</div>
@@ -24,7 +24,7 @@
             </a>
 
             <div class="nav-label">Main</div>
-            <!-- Navigation links: Let users move between the website pages. -->
+            <!-- These links open the different pages of the website. -->
 <nav class="nav-list">
                 <a class="nav-link active" href="index.html"><span class="nav-icon">▦</span>Overview</a>
                 <a class="nav-link" href="budget.html"><span class="nav-icon">↗</span>Budget &amp; Expenses</a>
@@ -52,7 +52,7 @@
         <div class="mobile-overlay" id="mobile-overlay"></div>
 
         <div class="main">
-            <!-- Top bar: Shows the page location, current date, and quick controls. -->
+            <!-- This top bar shows the page title, date, and quick controls. -->
 <header class="topbar">
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button>
@@ -67,7 +67,7 @@
                 </div>
             </header>
 
-            <!-- Main content: Holds the main information and tools for this page. -->
+            <!-- This area contains the main information and tools for this page. -->
 <main class="content">
                 <div class="page-heading">
                     <div>
@@ -79,7 +79,7 @@
                 </div>
 
                 <div class="modal-backdrop hidden" id="quick-entry-modal" role="dialog" aria-modal="true" aria-labelledby="quick-entry-title">
-                    <!-- modal card: Groups related Dashboard content and controls. -->
+                    <!-- This section groups related Dashboard information and controls. -->
                     <section class="modal-card">
                         <div class="panel-heading">
                             <div>
@@ -89,7 +89,7 @@
                             <button type="button" class="modal-close" id="close-add-entry" aria-label="Close">×</button>
                         </div>
 
-                        <!-- transaction form: Collects information before JavaScript processes it. -->
+                        <!-- This form collects information that JavaScript uses when the user submits it. -->
                         <form id="transaction-form">
                             <input type="hidden" id="transaction-id">
 
@@ -141,12 +141,12 @@
                     </section>
                 </div>
 
-                <!-- panel welcome guide: Groups related Dashboard content and controls. -->
+                <!-- This section groups related Dashboard information and controls. -->
                 <section class="panel welcome-guide" style="margin-bottom:18px">
                     <div class="welcome-guide-copy"><span class="pill">NEW USER?</span><h2 style="margin-top:10px">Learn how to use Wealthness</h2><p class="panel-subtitle">A quick walkthrough of the tools that help you track spending, plan savings, and understand your finances.</p></div>
                     <button class="btn btn-primary" type="button" id="open-user-guide">How to use Wealthness →</button>
                 </section>
-                <!-- grid stats grid: Groups related Dashboard content and controls. -->
+                <!-- This section groups related Dashboard information and controls. -->
                 <section class="grid stats-grid">
                     <article class="stat-card">
                         <div class="stat-top">
@@ -185,7 +185,7 @@
                     </article>
                 </section>
 
-                <!-- grid two col: Groups related Dashboard content and controls. -->
+                <!-- This section groups related Dashboard information and controls. -->
                 <section class="grid two-col">
                     <article class="panel">
                         <div class="panel-heading">
@@ -214,7 +214,7 @@
                     </article>
                 </section>
 
-                <!-- grid equal col: Groups related Dashboard content and controls. -->
+                <!-- This section groups related Dashboard information and controls. -->
                 <section class="grid equal-col">
                     <article class="panel">
                         <div class="panel-heading">
@@ -245,7 +245,7 @@
                     </article>
                 </section>
 
-                <!-- panel: Groups related Dashboard content and controls. -->
+                <!-- This section groups related Dashboard information and controls. -->
                 <section class="panel" style="margin-bottom:18px">
                     <div class="panel-heading">
                         <div>
@@ -256,7 +256,7 @@
                     </div>
                     <div class="grid stats-grid" id="spending-insights"></div>
                 </section>
-                <!-- panel: Groups related Dashboard content and controls. -->
+                <!-- This section groups related Dashboard information and controls. -->
                 <section class="panel" style="margin-bottom:18px">
                     <div class="panel-heading"><div><h2>Financial health overview</h2><p class="panel-subtitle">A simple estimate based on the records saved in this browser.</p></div><span class="pill">Educational estimate</span></div>
                     <div class="grid stats-grid" id="health-stats"></div>
@@ -268,7 +268,7 @@
                     </div>
                     <div style="margin-top:16px"><h3>Suggestions to consider</h3><div id="health-tips" class="category-list" style="margin-top:10px"></div></div>
                 </section>
-                <!-- panel: Groups related Dashboard content and controls. -->
+                <!-- This section groups related Dashboard information and controls. -->
                 <section class="panel">
                     <div class="panel-heading">
                         <div>
@@ -279,7 +279,7 @@
                     </div>
 
                     <div class="table-wrap">
-                        <!-- Table: Organizes related records into rows and columns. -->
+                        <!-- This table displays related information in rows and columns. -->
                         <table>
                             <thead>
                                 <tr>
@@ -299,7 +299,7 @@
     </div>
 
     <div class="modal-backdrop hidden" id="user-guide-modal" role="dialog" aria-modal="true" aria-labelledby="user-guide-title">
-        <!-- modal card guide modal: Groups related Dashboard content and controls. -->
+        <!-- This section groups related Dashboard information and controls. -->
         <section class="modal-card guide-modal">
             <div class="panel-heading"><div><div class="eyebrow">QUICK START</div><h2 id="user-guide-title">How to use Wealthness</h2><p class="panel-subtitle">Follow these simple steps to get started.</p></div><button type="button" class="modal-close" id="close-user-guide" aria-label="Close guide">×</button></div>
             <ol class="guide-steps">
