@@ -37,6 +37,9 @@
                 <a class="nav-link " href="debt.html">
                     <span class="nav-icon">▤</span>Debt Management
                 </a>
+                <a class="nav-link " href="calendar.html">
+                    <span class="nav-icon">▦</span>Financial Calendar
+                </a>
                 <a class="nav-link " href="guides.html">
                     <span class="nav-icon">▧</span>Financial Guides
                 </a>
@@ -180,6 +183,26 @@
 
                 </section>
 
+                <section class="panel" style="margin-bottom:18px">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Recurring transactions</h2>
+                            <p class="panel-subtitle">Automatically add regular income or expenses when their next date arrives.</p>
+                        </div>
+                    </div>
+                    <form id="recurring-form">
+                        <div class="form-grid">
+                            <div class="form-field"><label for="recurring-description">Description</label><input id="recurring-description" placeholder="e.g. Monthly allowance" required></div>
+                            <div class="form-field"><label for="recurring-amount">Amount (₱)</label><input id="recurring-amount" type="number" min="0.01" step=".01" required></div>
+                            <div class="form-field"><label for="recurring-type">Type</label><select id="recurring-type"><option value="expense">Expense</option><option value="income">Income</option></select></div>
+                            <div class="form-field"><label for="recurring-category">Category</label><select id="recurring-category"></select></div>
+                            <div class="form-field"><label for="recurring-frequency">Repeat</label><select id="recurring-frequency"><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select></div>
+                            <div class="form-field"><label for="recurring-next-date">Next date</label><input id="recurring-next-date" type="date" required></div>
+                        </div>
+                        <div class="form-actions"><button class="btn btn-primary" type="submit">Save recurring entry</button></div>
+                    </form>
+                    <div class="category-list" id="recurring-list" style="margin-top:18px"></div>
+                </section>
                 <section class="panel">
                     <div class="panel-heading">
                         <div>
