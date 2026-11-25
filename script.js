@@ -11,6 +11,9 @@ const defaultData = () => ({
     goals:[],
     debts:[],
     accounts:[],
+    recurring:[],
+    plannedPayments:[],
+    customCategories:[],
     planner:{income:"",essential:"",rate:20,goal:"",months:12},
     settings:{name:"",currency:"PHP"}
 });
@@ -21,6 +24,9 @@ function loadData(){
         return {
             ...defaultData(),
             ...(raw||{}),
+            recurring:Array.isArray(raw?.recurring)?raw.recurring:[],
+            plannedPayments:Array.isArray(raw?.plannedPayments)?raw.plannedPayments:[],
+            customCategories:Array.isArray(raw?.customCategories)?raw.customCategories:[],
             settings:{...defaultData().settings,...(raw?.settings||{})},
             planner:{...defaultData().planner,...(raw?.planner||{})}
         };
@@ -78,6 +84,120 @@ function availableBalance(){
 
 function categoryName(t){
     return t.category||"Others";
+}
+
+function allCategories(){
+    return [...new Set(["Food","Housing","Transportation","Education","Bills","Personal","Salary","Allowance","Others",...(data.customCategories||[])])];
+}
+
+function populateCategoryOptions(){
+    ["transaction-category","recurring-category","planned-category"].forEach(id=>{
+        const select=byId(id);
+        if(!select)return;
+        const current=select.value;
+        select.innerHTML=allCategories().map(cat=>`<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join("");
+        if(allCategories().includes(current))select.value=current;
+    });
+}
+
+function formatLocalDate(date){
+    const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+}
+
+function parseLocalDate(value){
+    const [y,m,d]=String(value||"").split("-").map(Number);
+    return y&&m&&d?new Date(y,m-1,d):null;
+}
+
+function advanceDate(value,frequency){
+    const date=parseLocalDate(value);
+    if(!date)return value;
+    if(frequency==="weekly")date.setDate(date.getDate()+7);
+    else if(frequency==="yearly")date.setFullYear(date.getFullYear()+1);
+    else date.setMonth(date.getMonth()+1);
+    return formatLocalDate(date);
+}
+
+function processRecurringTransactions(){
+    let changed=false;
+    const today=todayISO();
+    (data.recurring||[]).forEach(item=>{
+        let runs=0;
+        while(item.nextDate&&item.nextDate<=today&&runs<36){
+            data.transactions.push({
+                id:uid(),
+                date:item.nextDate,
+                type:item.type,
+                description:item.description,
+                category:item.category||"Others",
+                amount:Number(item.amount)||0,
+                source:"Recurring",
+                recurringId:item.id
+            });
+            item.nextDate=advanceDate(item.nextDate,item.frequency||"monthly");
+            runs++;
+            changed=true;
+        }
+    });
+    if(changed)save();
+}
+
+function renderRecurring(){
+    const el=byId("recurring-list");
+    if(!el)return;
+    el.innerHTML=data.recurring.length?data.recurring.map(item=>`
+        <div class="category-row recurring-row">
+            <span class="category-name">${escapeHTML(item.description)}</span>
+            <span class="category-amount">${money(item.amount)} · ${escapeHTML(item.frequency)}</span>
+            <span class="goal-meta">Next: ${escapeHTML(item.nextDate||"Not scheduled")} · ${escapeHTML(item.category||"Others")}</span>
+            <div><button class="btn btn-danger btn-small" data-delete-recurring="${item.id}">Remove</button></div>
+        </div>`).join(""):`<div class="empty-state">No recurring entries yet. Add regular income or expenses to save time.</div>`;
+}
+
+function renderCalendar(){
+    const el=byId("calendar-events");
+    if(!el)return;
+    const today=todayISO();
+    const events=[
+        ...(data.plannedPayments||[]).map(item=>({id:item.id,kind:"planned",date:item.date,title:item.name,amount:item.amount,type:item.type||"expense",category:item.category||"Bills"})),
+        ...(data.debts||[]).filter(item=>item.due&&Number(item.remaining)>0).map(item=>({id:item.id,kind:"debt",date:item.due,title:item.name,amount:item.remaining,type:"expense",category:"Debt"})),
+        ...(data.recurring||[]).filter(item=>item.nextDate).map(item=>({id:item.id,kind:"recurring",date:item.nextDate,title:item.description,amount:item.amount,type:item.type,category:item.category||"Others"}))
+    ].sort((a,b)=>a.date.localeCompare(b.date));
+    const upcoming=events.filter(event=>event.date>=today&&event.type==="expense");
+    const overdue=events.filter(event=>event.date<today);
+    setText("upcoming-count",String(events.filter(event=>event.date>=today).length));
+    setText("upcoming-total",money(sum(upcoming,event=>event.amount)));
+    setText("overdue-count",String(overdue.length));
+    el.innerHTML=events.length?events.map(event=>{
+        const status=event.date<today?"Overdue":event.date===today?"Due today":"Upcoming";
+        const kindLabel=event.kind==="debt"?"Debt due":event.kind==="recurring"?"Recurring":"Planned";
+        return `<article class="calendar-event">
+            <div class="calendar-date"><strong>${escapeHTML(event.date)}</strong><span>${status}</span></div>
+            <div class="calendar-detail"><strong>${escapeHTML(event.title)}</strong><span>${escapeHTML(kindLabel)} · ${escapeHTML(event.category)}</span></div>
+            <div class="calendar-amount ${event.type==="income"?"amount-income":"amount-expense"}">${event.type==="income"?"+":"−"}${money(event.amount)}</div>
+            ${event.kind==="planned"?`<button class="btn btn-danger btn-small" data-delete-planned="${event.id}">Remove</button>`:""}
+        </article>`;
+    }).join(""):`<div class="empty-state">Nothing scheduled yet. Add a planned payment or record a debt due date.</div>`;
+}
+
+function renderInsights(){
+    const el=byId("spending-insights");
+    if(!el)return;
+    const now=new Date(),previous=new Date(now.getFullYear(),now.getMonth()-1,1);
+    const previousKey=`${previous.getFullYear()}-${String(previous.getMonth()+1).padStart(2,"0")}`;
+    const previousExpenses=sum(data.transactions.filter(t=>monthKey(t.date)===previousKey&&t.type==="expense"),t=>t.amount);
+    const current=totals(monthTransactions());
+    const groups={};
+    monthTransactions().filter(t=>t.type==="expense").forEach(t=>groups[categoryName(t)]=(groups[categoryName(t)]||0)+Number(t.amount));
+    const top=Object.entries(groups).sort((a,b)=>b[1]-a[1])[0];
+    const rate=current.income?Math.round((current.income-current.expense)/current.income*100):0;
+    const change=previousExpenses?Math.round((current.expense-previousExpenses)/previousExpenses*100):null;
+    const changeText=change===null?"No spending recorded last month":`${Math.abs(change)}% ${change>0?"higher":change<0?"lower":"unchanged"} than last month`;
+    el.innerHTML=`
+        <article class="stat-card"><div class="stat-label">Savings rate this month</div><div class="stat-value">${current.income?`${rate}%`:"—"}</div><div class="stat-note">Based on recorded income and expenses</div></article>
+        <article class="stat-card"><div class="stat-label">Top spending category</div><div class="stat-value insight-category">${top?escapeHTML(top[0]):"—"}</div><div class="stat-note">${top?money(top[1])+" spent this month":"Add expenses to see an insight"}</div></article>
+        <article class="stat-card"><div class="stat-label">Spending comparison</div><div class="stat-value">${money(current.expense)}</div><div class="stat-note">${changeText}</div></article>`;
 }
 
 function toast(message){
@@ -178,7 +298,7 @@ function renderBudgets(){
     const el=byId("budget-limits");
     if(!el)return;
 
-    const categories=["Housing","Food","Transportation","Education","Bills","Personal","Others"];
+    const categories=allCategories();
 
     el.innerHTML=categories.map(cat=>{
         const limit=Number(data.budgets[cat])||0;
@@ -294,6 +414,9 @@ function refresh(){
     renderSavings();
     renderDebt();
     renderSettings();
+    renderRecurring();
+    renderCalendar();
+    renderInsights();
 }
 
 function renderSettings(){
@@ -307,6 +430,9 @@ function renderSettings(){
 
 function initPage(){
     const page=document.body.dataset.page;
+
+    populateCategoryOptions();
+    processRecurringTransactions();
 
     if(byId("transaction-date"))byId("transaction-date").value=todayISO();
     if(byId("planner-income"))byId("planner-income").value=data.planner.income||"";
@@ -342,6 +468,68 @@ function initPage(){
     byId("cancel-edit-button")?.addEventListener("click",resetTransactionForm);
     byId("budget-search")?.addEventListener("input",renderBudget);
     byId("type-filter")?.addEventListener("change",renderBudget);
+
+    byId("custom-category-form")?.addEventListener("submit",e=>{
+        e.preventDefault();
+        const category=val("custom-category-input");
+        if(!category){
+            toast("Enter a category name.");
+            return;
+        }
+        if(allCategories().some(item=>item.toLowerCase()===category.toLowerCase())){
+            toast("That category already exists.");
+            return;
+        }
+        data.customCategories.push(category);
+        save();
+        e.target.reset();
+        populateCategoryOptions();
+        renderBudgets();
+        toast("Custom category added.");
+    });
+
+    byId("recurring-form")?.addEventListener("submit",e=>{
+        e.preventDefault();
+        const description=val("recurring-description");
+        const amount=Number(val("recurring-amount"));
+        const nextDate=val("recurring-next-date");
+        if(!description||!nextDate||!Number.isFinite(amount)||amount<=0){
+            toast("Enter a description, valid amount, and next date.");
+            return;
+        }
+        data.recurring.push({
+            id:uid(),
+            description,
+            amount,
+            type:val("recurring-type"),
+            category:val("recurring-category")||"Others",
+            frequency:val("recurring-frequency")||"monthly",
+            nextDate
+        });
+        save();
+        e.target.reset();
+        if(byId("recurring-next-date"))byId("recurring-next-date").value=todayISO();
+        refresh();
+        toast("Recurring entry saved.");
+    });
+
+    byId("planned-form")?.addEventListener("submit",e=>{
+        e.preventDefault();
+        const name=val("planned-name"),amount=Number(val("planned-amount")),date=val("planned-date");
+        if(!name||!date||!Number.isFinite(amount)||amount<=0){
+            toast("Enter a description, valid amount, and date.");
+            return;
+        }
+        data.plannedPayments.push({
+            id:uid(),name,amount,date,
+            category:val("planned-category")||"Bills",
+            type:val("planned-type")||"expense"
+        });
+        save();
+        e.target.reset();
+        refresh();
+        toast("Planned payment added to your calendar.");
+    });
 
     byId("goal-form")?.addEventListener("submit",e=>{
         e.preventDefault();
@@ -416,6 +604,20 @@ function initPage(){
         if(!b)return;
 
         if(b.dataset.editTx)editTransaction(b.dataset.editTx);
+
+        if(b.dataset.deleteRecurring){
+            data.recurring=data.recurring.filter(item=>item.id!==b.dataset.deleteRecurring);
+            save();
+            refresh();
+            toast("Recurring entry removed.");
+        }
+
+        if(b.dataset.deletePlanned){
+            data.plannedPayments=data.plannedPayments.filter(item=>item.id!==b.dataset.deletePlanned);
+            save();
+            refresh();
+            toast("Planned payment removed.");
+        }
 
         if(b.dataset.deleteTx&&confirm("Delete this transaction?")){
             data.transactions=data.transactions.filter(t=>t.id!==b.dataset.deleteTx);
@@ -508,6 +710,15 @@ function initPage(){
             save();
             renderSettings();
         }
+    });
+
+    byId("export-csv")?.addEventListener("click",()=>{
+        const rows=[["date","type","description","category","amount"],...data.transactions.map(item=>[
+            item.date,item.type,item.description,item.category||"Others",item.amount
+        ])];
+        const csv=rows.map(row=>row.map(value=>`"${String(value??"").replace(/"/g,'""')}"`).join(",")).join("\\n");
+        downloadBlob(new Blob([csv],{type:"text/csv;charset=utf-8"}),"wealthness-financial-report.csv");
+        toast("CSV report exported.");
     });
 
     byId("export-data")?.addEventListener("click",()=>{
