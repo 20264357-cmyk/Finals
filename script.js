@@ -428,11 +428,51 @@ function renderSettings(){
     if(byId("profile-name"))byId("profile-name").value=data.settings.name||"";
 }
 
+
+function initTheme(){
+ const saved=localStorage.getItem("wealthnessTheme");
+ if(saved==="dark")document.body.classList.add("dark-mode");
+ const update=()=>{const dark=document.body.classList.contains("dark-mode");document.querySelectorAll("#theme-toggle").forEach(b=>{b.innerHTML=dark?'☀ <span>Light mode</span>':'☾ <span>Dark mode</span>';b.setAttribute("aria-label",dark?"Switch to light mode":"Switch to dark mode")})};
+ const toggle=()=>{document.body.classList.toggle("dark-mode");localStorage.setItem("wealthnessTheme",document.body.classList.contains("dark-mode")?"dark":"light");update()};
+ document.querySelectorAll("#theme-toggle").forEach(b=>b.addEventListener("click",toggle));
+ byId("settings-theme-toggle")?.addEventListener("click",toggle);update();
+}
+function renderHealth(){
+ if(!byId("health-stats"))return;
+ const m=totals(monthTransactions()),all=totals(data.transactions),saved=sum(data.goals,g=>g.saved),targets=sum(data.goals,g=>g.target);
+ const debtOriginal=sum(data.debts,d=>d.original),debtRemaining=sum(data.debts,d=>d.remaining),budgetTotal=sum(Object.values(data.budgets),v=>v);
+ const hasRecords=Boolean(data.transactions.length||data.goals.length||data.debts.length);
+ const score=(m.income>0&&m.expense<=m.income?30:0)+(budgetTotal>0?(m.expense<=budgetTotal?25:8):0)+(targets>0?Math.round(Math.min(1,saved/targets)*25):0)+(debtOriginal>0?Math.round(Math.max(0,1-debtRemaining/debtOriginal)*20):(data.debts.length?0:20));
+ const label=!hasRecords?"Add records to see an estimate":score>=80?"Good habits":score>=55?"Making progress":score>=30?"Room to improve":"Start with small steps";
+ byId("health-stats").innerHTML=`<article class="stat-card"><div class="stat-label">Estimated health score</div><div class="stat-value">${hasRecords?score+"/100":"—"}</div><div class="stat-note">${label}</div></article><article class="stat-card"><div class="stat-label">This month's income</div><div class="stat-value">${money(m.income)}</div><div class="stat-note">Recorded income</div></article><article class="stat-card"><div class="stat-label">This month's expenses</div><div class="stat-value">${money(m.expense)}</div><div class="stat-note">${m.income?money(m.income-m.expense)+" remaining":"Add income to compare"}</div></article><article class="stat-card"><div class="stat-label">Total savings recorded</div><div class="stat-value">${money(saved)}</div><div class="stat-note">Across ${data.goals.length} goal(s)</div></article>`;
+ byId("health-cashflow").innerHTML=`<div class="category-row"><span>Income</span><strong class="amount-income">${money(m.income)}</strong><span>Expenses</span><strong class="amount-expense">${money(m.expense)}</strong></div><div class="result-box" style="margin-top:14px"><small>Net cash flow</small><strong>${money(m.income-m.expense)}</strong></div>`;
+ byId("health-savings").innerHTML=data.goals.length?data.goals.map(g=>{const pct=Math.min(100,Number(g.saved)/Math.max(1,Number(g.target))*100);return `<div class="category-row"><span>${escapeHTML(g.name)}</span><strong>${Math.round(pct)}%</strong><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div></div>`}).join(""):'<div class="empty-state">Create a savings goal to see progress here.</div>';
+ byId("health-debt").innerHTML=data.debts.length?`<div class="stat-value">${money(debtRemaining)}</div><p class="panel-subtitle">Remaining across ${data.debts.length} recorded debt(s), from an original ${money(debtOriginal)}.</p>`:'<div class="empty-state">No debt records added.</div>';
+ byId("health-summary").innerHTML=`<div class="category-row"><span>All-time recorded income</span><strong>${money(all.income)}</strong><span>All-time recorded expenses</span><strong>${money(all.expense)}</strong><span>Budget limits set</span><strong>${money(budgetTotal)}</strong></div>`;
+ const tips=[];if(!data.transactions.length)tips.push("Add income and expenses in Budget & Expenses to make your summary more useful.");else if(m.income&&m.expense>m.income)tips.push("Recorded expenses are higher than this month's income. Review flexible spending and upcoming payments.");else if(m.income&&!budgetTotal)tips.push("Consider setting monthly category limits in Budget & Expenses.");if(!data.goals.length)tips.push("Create a small, realistic savings goal.");else if(saved<targets)tips.push("Keep your savings goal manageable and contribute when your budget allows.");if(data.debts.some(d=>d.remaining>0))tips.push("Review debt due dates in Debt Management and Financial Calendar.");if(!tips.length)tips.push("Keep recording transactions regularly so your overview stays useful.");
+ byId("health-tips").innerHTML=tips.map(t=>`<div class="health-tip">${escapeHTML(t)}</div>`).join("");
+}
+function initCalculators(){
+ byId("savings-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const target=Number(val("calc-target")),current=Number(val("calc-current"))||0,months=Number(val("calc-months"));if(target<=0||months<=0){toast("Enter valid goal details.");return}byId("savings-calc-result").innerHTML=`<small>Estimated amount to save each month</small><strong>${money(Math.max(0,target-current)/months)}</strong><p class="panel-subtitle">${money(Math.max(0,target-current))} remaining over ${months} month(s).</p>`});
+ byId("emergency-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const expenses=Number(val("calc-essentials")),months=Number(val("calc-emergency-months"));if(expenses<0){toast("Enter a valid expense amount.");return}byId("emergency-calc-result").innerHTML=`<small>Estimated emergency fund target</small><strong>${money(expenses*months)}</strong><p class="panel-subtitle">Based on ${months} month(s) of essential expenses.</p>`});
+ byId("budget-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const income=Number(val("calc-income")),rate=Number(val("calc-save-rate"));if(income<0||rate<0||rate>100){toast("Enter valid income and savings percentage.");return}const savings=income*rate/100;byId("budget-calc-result").innerHTML=`<article class="stat-card"><div class="stat-label">Suggested savings</div><div class="stat-value">${money(savings)}</div></article><article class="stat-card"><div class="stat-label">Remaining for expenses</div><div class="stat-value">${money(income-savings)}</div></article>`});
+}
+function renderChallenge(){
+ const el=byId("challenge-progress");if(!el)return;const active=data.challengeState;
+ if(!active){el.innerHTML='<div class="empty-state">You have not started a challenge yet. Choose one above to begin.</div>';return}
+ const total=Number(active.total)||7,done=(active.days||[]).length,pct=Math.min(100,done/total*100);
+ el.innerHTML=`<h3>${total}-Day ${total===7?"Starter":"Consistency"} Challenge</h3><p class="panel-subtitle">${done} of ${total} daily check-ins completed.</p><div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:${pct}%"></div></div><p class="panel-subtitle">${Math.round(pct)}% complete</p><button class="btn btn-primary" id="challenge-checkin" type="button" ${done>=total?"disabled":""}>Mark today's check-in</button> <button class="btn btn-secondary" id="challenge-reset" type="button">Reset challenge</button>`;
+}
+
 function initPage(){
     const page=document.body.dataset.page;
+    initTheme();
 
     populateCategoryOptions();
     processRecurringTransactions();
+    renderHealth();
+    initCalculators();
+    renderChallenge();
 
     if(byId("transaction-date"))byId("transaction-date").value=todayISO();
     if(byId("planner-income"))byId("planner-income").value=data.planner.income||"";
@@ -604,6 +644,9 @@ function initPage(){
         if(!b)return;
 
         if(b.dataset.editTx)editTransaction(b.dataset.editTx);
+        if(b.dataset.challenge){data.challengeState={total:Number(b.dataset.challenge),days:[]};save();renderChallenge();toast("Savings challenge started.");}
+        if(b.id==="challenge-checkin"){const today=todayISO(),days=data.challengeState?.days||[];if(!days.includes(today)){days.push(today);data.challengeState.days=days;save();renderChallenge();toast("Today's check-in saved.");}else toast("You already checked in today.");}
+        if(b.id==="challenge-reset"&&confirm("Reset your current challenge?")){data.challengeState=null;save();renderChallenge();toast("Challenge reset.");}
 
         if(b.dataset.deleteRecurring){
             data.recurring=data.recurring.filter(item=>item.id!==b.dataset.deleteRecurring);
