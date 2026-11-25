@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Wealthness personal finance tools"><title>Financial Health Center | Wealthness</title><link rel="stylesheet" href="style.css"><script src="script.js" defer></script></head>
+<body data-page="health"><div class="app-shell">
+<aside class="sidebar" id="sidebar"><a class="brand" href="index.html"><div class="brand-mark">W</div><div><div class="brand-name">Wealthness</div><div class="brand-tag">Your Money, in Focus.</div></div></a>
+<div class="nav-label">Main</div>
+            <nav class="nav-list">
+                <a class="nav-link" href="index.html"><span class="nav-icon">▦</span>Overview</a>
+                <a class="nav-link" href="budget.html"><span class="nav-icon">↗</span>Budget &amp; Expenses</a>
+                <a class="nav-link" href="savings.html"><span class="nav-icon">◎</span>Savings Goals</a>
+                <a class="nav-link" href="debt.html"><span class="nav-icon">▤</span>Debt Management</a>
+                <a class="nav-link" href="calendar.html"><span class="nav-icon">▦</span>Financial Calendar</a>
+            </nav>
+            <div class="nav-label nav-label-spaced">Financial Tools</div>
+            <nav class="nav-list">
+                <a class="nav-link" href="health.html"><span class="nav-icon">♥</span>Financial Health</a>
+                <a class="nav-link" href="calculators.html"><span class="nav-icon">⌗</span>Calculators</a>
+                <a class="nav-link" href="challenges.html"><span class="nav-icon">★</span>Savings Challenges</a>
+            </nav>
+            <div class="nav-label nav-label-spaced">Resources</div>
+            <nav class="nav-list">
+                <a class="nav-link" href="guides.html"><span class="nav-icon">▧</span>Financial Guides</a>
+                <a class="nav-link" href="settings.html"><span class="nav-icon">⚙</span>Settings</a>
+            </nav>
+<div class="sidebar-bottom"><div class="sidebar-tip"><strong>Small steps add up.</strong><p>Build healthy money habits one decision at a time.</p></div><div class="sidebar-footer">© 2026 Wealthness · Student project</div></div></aside>
+<div class="mobile-overlay" id="mobile-overlay"></div><div class="main"><header class="topbar"><div class="topbar-left"><button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button><div class="breadcrumb">Financial Tools <strong>Financial Health Center</strong></div></div><div class="topbar-right"><span class="today" id="current-date"></span><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Toggle dark mode">☾ <span>Dark mode</span></button><div class="avatar">W</div></div></header>
+<main class="content"><div class="page-heading"><div><div class="eyebrow">WEALTHNESS FINANCIAL TOOLS</div><h1>Financial Health Center</h1><p class="page-subtitle">Understand your current money habits using the records saved in Wealthness.</p></div></div>
+<section class="grid stats-grid" id="health-stats"></section>
+<section class="grid two-col">
+<article class="panel"><div class="panel-heading"><div><h2>Income vs. expenses</h2><p class="panel-subtitle">This month's recorded cash flow</p></div></div><div id="health-cashflow"></div></article>
+<article class="panel"><div class="panel-heading"><div><h2>Savings goals</h2><p class="panel-subtitle">Progress across your active goals</p></div><a class="text-link" href="savings.html">Manage goals →</a></div><div id="health-savings"></div></article>
+</section>
+<section class="grid two-col">
+<article class="panel"><div class="panel-heading"><div><h2>Debt overview</h2><p class="panel-subtitle">Remaining recorded debt balances</p></div><a class="text-link" href="debt.html">Manage debt →</a></div><div id="health-debt"></div></article>
+<article class="panel"><div class="panel-heading"><div><h2>Monthly summary</h2><p class="panel-subtitle">A quick review of this month's records</p></div></div><div id="health-summary"></div></article>
+</section>
+<section class="panel"><div class="panel-heading"><div><h2>Suggestions to consider</h2><p class="panel-subtitle">Simple ideas based on the information you've entered</p></div></div><div id="health-tips" class="category-list"></div><p class="panel-subtitle" style="margin-top:14px">The health score is an educational estimate, not a credit score or professional financial assessment. It is based only on records entered in this browser.</p></section></main></div></div><div id="toast" class="success-message hidden" role="status" aria-live="polite" style="position:fixed;right:20px;bottom:20px;z-index:50;box-shadow:var(--shadow)"></div></body></html>
