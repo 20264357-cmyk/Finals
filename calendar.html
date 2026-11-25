@@ -1,6 +1,8 @@
+<!-- calendar page: This file contains the structure and content displayed on the calendar page. -->
 
 <!DOCTYPE html>
 <html lang="en">
+<!-- Head: Sets page information, title, stylesheets, and JavaScript files. -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,9 +11,11 @@
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
+<!-- Body: Contains everything visible and interactive on this page. -->
 <body data-page="calendar">
     <div class="app-shell">
-        <aside class="sidebar" id="sidebar">
+        <!-- Sidebar: Shared navigation that links to the other Wealthness pages. -->
+<aside class="sidebar" id="sidebar">
             <a class="brand" href="index.html">
                 <div class="brand-mark">W</div>
                 <div>
@@ -21,7 +25,8 @@
             </a>
 
             <div class="nav-label">Main</div>
-            <nav class="nav-list">
+            <!-- Navigation links: Let users move between the website pages. -->
+<nav class="nav-list">
                 <a class="nav-link" href="index.html"><span class="nav-icon">▦</span>Overview</a>
                 <a class="nav-link" href="budget.html"><span class="nav-icon">↗</span>Budget &amp; Expenses</a>
                 <a class="nav-link" href="savings.html"><span class="nav-icon">◎</span>Savings Goals</a>
@@ -46,7 +51,8 @@
         <div class="mobile-overlay" id="mobile-overlay"></div>
 
         <div class="main">
-            <header class="topbar">
+            <!-- Top bar: Shows the page location, current date, and quick controls. -->
+<header class="topbar">
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation">☰</button>
                     <div class="breadcrumb">Workspace <strong>Financial Calendar</strong></div>
@@ -57,7 +63,8 @@
                 </div>
             </header>
 
-            <main class="content">
+            <!-- Main content: Holds the main information and tools for this page. -->
+<main class="content">
                 <div class="page-heading">
                     <div>
                         <div class="eyebrow">WEALTHNESS WORKSPACE</div>
@@ -66,15 +73,18 @@
                     </div>
                 </div>
 
+                <!-- grid stats grid: Groups related calendar content and controls. -->
                 <section class="grid stats-grid">
                     <article class="stat-card"><div class="stat-label">Upcoming events</div><div class="stat-value" id="upcoming-count">0</div><div class="stat-note">Scheduled from today onward</div></article>
                     <article class="stat-card"><div class="stat-label">Upcoming expenses</div><div class="stat-value" id="upcoming-total">₱0.00</div><div class="stat-note">Upcoming scheduled expense amounts</div></article>
                     <article class="stat-card"><div class="stat-label">Past due dates</div><div class="stat-value" id="overdue-count">0</div><div class="stat-note">Review these recorded dates</div></article>
                 </section>
 
+                <!-- grid two col: Groups related calendar content and controls. -->
                 <section class="grid two-col">
                     <article class="panel">
                         <div class="panel-heading"><div><h2>Add a planned payment</h2><p class="panel-subtitle">Schedule a bill or an expected income date.</p></div></div>
+                        <!-- planned form: Collects information before JavaScript processes it. -->
                         <form id="planned-form">
                             <div class="form-grid">
                                 <div class="form-field full"><label for="planned-name">Description</label><input id="planned-name" placeholder="e.g. Electricity bill" required></div>
@@ -93,6 +103,7 @@
                     </article>
                 </section>
 
+                <!-- panel: Groups related calendar content and controls. -->
                 <section class="panel">
                     <div class="panel-heading"><div><h2>Upcoming schedule</h2><p class="panel-subtitle">Planned payments, recurring entries, and recorded debt due dates.</p></div></div>
                     <div class="calendar-events" id="calendar-events"></div>
