@@ -1,10 +1,14 @@
 
+// Shared browser-storage key used by every Wealthness page.
 const STORAGE_KEY = "wealthnessData_v2";
 
 const money = n => new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP",maximumFractionDigits:2}).format(Number(n)||0);
-const todayISO = () => new Date().toISOString().slice(0,10);
+// Use the browser’s local date so dates stay correct in the user’s timezone.
+const todayISO = () => formatLocalDate(new Date());
 const uid = () => "w_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const escapeHTML = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// One shared data object powers every page. Pages read the parts they need
+// and save changes here so the dashboard and other summaries stay in sync.
 const defaultData = () => ({
     transactions:[],
     budgets:{},
@@ -18,6 +22,7 @@ const defaultData = () => ({
     settings:{name:"",currency:"PHP"}
 });
 
+// Load saved records when the app opens. Defaults keep older backups compatible.
 function loadData(){
     try {
         const raw=JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -38,6 +43,7 @@ function loadData(){
 
 let data=loadData();
 
+// Persist the shared data object in this browser. This is local storage, not a bank connection.
 function save(){
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
@@ -62,6 +68,7 @@ function currentMonth(){
     return todayISO().slice(0,7);
 }
 
+// Reuse one month filter so dashboard totals, insights, and health summaries agree.
 function monthTransactions(){
     return data.transactions.filter(t=>monthKey(t.date)===currentMonth());
 }
@@ -119,6 +126,7 @@ function advanceDate(value,frequency){
     return formatLocalDate(date);
 }
 
+// When a recurring date arrives, create its transaction and move its next date forward.
 function processRecurringTransactions(){
     let changed=false;
     const today=todayISO();
@@ -155,6 +163,7 @@ function renderRecurring(){
         </div>`).join(""):`<div class="empty-state">No recurring entries yet. Add regular income or expenses to save time.</div>`;
 }
 
+// The calendar combines planned payments, debt due dates, and recurring entries.
 function renderCalendar(){
     const el=byId("calendar-events");
     if(!el)return;
@@ -209,6 +218,7 @@ function toast(message){
     toast.timer=setTimeout(()=>el.classList.add("hidden"),2800);
 }
 
+// Dashboard reads the shared records and refreshes its totals, chart, spending, and goals.
 function renderOverview(){
     const all=totals(data.transactions),m=totals(monthTransactions());
 
@@ -232,6 +242,7 @@ function renderOverview(){
     setText("overview-saving-suggestion",money(income*planned/100));
 }
 
+// Build six local calendar months; matching YYYY-MM keys avoids UTC month shifts.
 function renderChart(){
     const el=byId("cashflow-chart");
     if(!el)return;
@@ -275,6 +286,7 @@ function renderOverviewGoals(){
     el.innerHTML=goals.length?goals.map(g=>`<div class="category-row"><span class="category-name">${escapeHTML(g.name)}</span><span class="category-amount">${Math.min(100,Math.round(g.saved/Math.max(1,g.target)*100))}%</span><div class="progress-track"><div class="progress-fill" style="width:${Math.min(100,g.saved/Math.max(1,g.target)*100)}%"></div></div></div>`).join(""):`<div class="empty-state">Create a savings goal to start tracking your progress.</div>`;
 }
 
+// Budget page lists the same transactions used by the dashboard and health overview.
 function renderBudget(){
     const list=byId("transaction-list");
     if(!list)return;
@@ -364,6 +376,7 @@ function editTransaction(id){
     byId("transaction-form").scrollIntoView({behavior:"smooth",block:"center"})
 }
 
+// Savings goals are shared with the dashboard and Financial Health summary.
 function renderSavings(){
     const el=byId("goals-list");
     if(!el)return;
@@ -376,6 +389,7 @@ function renderSavings(){
     updatePlanner();
 }
 
+// Calculator estimates use entered values or recorded income/essential expenses as defaults.
 function updatePlanner(){
     const income=Number(data.planner.income)||totals(monthTransactions()).income;
     const essential=Number(data.planner.essential)||sum(monthTransactions().filter(t=>t.type==="expense"&&["Housing","Food","Transportation","Education","Bills"].includes(t.category)),t=>t.amount);
@@ -396,6 +410,7 @@ function updatePlanner(){
     setText("planner-debt-total",money(debt));
 }
 
+// Debt balances feed the debt page, planner summary, health overview, and calendar due dates.
 function renderDebt(){
     const el=byId("debt-list");
     if(!el)return;
@@ -408,6 +423,7 @@ function renderDebt(){
     setText("debt-total",money(sum(data.debts,d=>d.remaining)));
 }
 
+// After a change, redraw every page section that may depend on the shared data.
 function refresh(){
     renderOverview();
     renderBudget();
@@ -439,6 +455,7 @@ function initTheme(){
  document.querySelectorAll("#theme-toggle").forEach(b=>b.addEventListener("click",toggle));
  byId("settings-theme-toggle")?.addEventListener("click",toggle);update();
 }
+// This is an educational estimate calculated from saved transactions, budgets, goals, and debts.
 function renderHealth(){
  if(!byId("health-stats"))return;
  const m=totals(monthTransactions()),all=totals(data.transactions),saved=sum(data.goals,g=>g.saved),targets=sum(data.goals,g=>g.target);
@@ -454,11 +471,13 @@ function renderHealth(){
  const tips=[];if(!data.transactions.length)tips.push("Add income and expenses in Budget & Expenses to make your summary more useful.");else if(m.income&&m.expense>m.income)tips.push("Recorded expenses are higher than this month's income. Review flexible spending and upcoming payments.");else if(m.income&&!budgetTotal)tips.push("Consider setting monthly category limits in Budget & Expenses.");if(!data.goals.length)tips.push("Create a small, realistic savings goal.");else if(saved<targets)tips.push("Keep your savings goal manageable and contribute when your budget allows.");if(data.debts.some(d=>d.remaining>0))tips.push("Review debt due dates in Debt Management and Financial Calendar.");if(!tips.length)tips.push("Keep recording transactions regularly so your overview stays useful.");
  byId("health-tips").innerHTML=tips.map(t=>`<div class="health-tip">${escapeHTML(t)}</div>`).join("");
 }
+// Calculators display estimates only; they do not change saved transactions or goal balances.
 function initCalculators(){
  byId("savings-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const target=Number(val("calc-target")),current=Number(val("calc-current"))||0,months=Number(val("calc-months"));if(target<=0||months<=0){toast("Enter valid goal details.");return}byId("savings-calc-result").innerHTML=`<small>Estimated amount to save each month</small><strong>${money(Math.max(0,target-current)/months)}</strong><p class="panel-subtitle">${money(Math.max(0,target-current))} remaining over ${months} month(s).</p>`});
  byId("emergency-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const expenses=Number(val("calc-essentials")),months=Number(val("calc-emergency-months"));if(expenses<0){toast("Enter a valid expense amount.");return}byId("emergency-calc-result").innerHTML=`<small>Estimated emergency fund target</small><strong>${money(expenses*months)}</strong><p class="panel-subtitle">Based on ${months} month(s) of essential expenses.</p>`});
  byId("budget-calc-form")?.addEventListener("submit",e=>{e.preventDefault();const income=Number(val("calc-income")),rate=Number(val("calc-save-rate"));if(income<0||rate<0||rate>100){toast("Enter valid income and savings percentage.");return}const savings=income*rate/100;byId("budget-calc-result").innerHTML=`<article class="stat-card"><div class="stat-label">Suggested savings</div><div class="stat-value">${money(savings)}</div></article><article class="stat-card"><div class="stat-label">Remaining for expenses</div><div class="stat-value">${money(income-savings)}</div></article>`});
 }
+// Challenge check-ins are stored with the same shared data and survive page reloads.
 function renderChallenge(){
  const el=byId("challenge-progress");if(!el)return;const active=data.challengeState;
  if(!active){el.innerHTML='<div class="empty-state">You have not started a challenge yet. Choose one above to begin.</div>';return}
@@ -466,6 +485,7 @@ function renderChallenge(){
  el.innerHTML=`<h3>${total}-Day ${total===7?"Starter":"Consistency"} Challenge</h3><p class="panel-subtitle">${done} of ${total} daily check-ins completed.</p><div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:${pct}%"></div></div><p class="panel-subtitle">${Math.round(pct)}% complete</p><button class="btn btn-primary" id="challenge-checkin" type="button" ${done>=total?"disabled":""}>Mark today's check-in</button> <button class="btn btn-secondary" id="challenge-reset" type="button">Reset challenge</button>`;
 }
 
+// Set up only the controls present on the current page, then render from shared local data.
 function initPage(){
     const page=document.body.dataset.page;
     initTheme();
