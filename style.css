@@ -1169,3 +1169,6 @@ body.dark-mode .chart-bar.expense{background:#2d9466}
 .challenge-progress-fill{height:100%;background:var(--green-600);border-radius:20px}
 .health-tip{padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);font-size:12px}
 @media(max-width:800px){.theme-toggle span{display:none}.theme-toggle{padding:8px 10px}.nav-label-spaced{margin-top:14px}}
+
+/* Keep the expanded navigation usable on shorter screens */
+.sidebar{overflow-y:auto;overscroll-behavior:contain}
