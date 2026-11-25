@@ -30,12 +30,6 @@
                 <a class="nav-link" href="debt.html"><span class="nav-icon">▤</span>Debt Management</a>
                 <a class="nav-link" href="calendar.html"><span class="nav-icon">▦</span>Financial Calendar</a>
             </nav>
-            <div class="nav-label nav-label-spaced">Financial Tools</div>
-            <nav class="nav-list">
-                <a class="nav-link" href="health.html"><span class="nav-icon">♥</span>Financial Health</a>
-                <a class="nav-link" href="calculators.html"><span class="nav-icon">⌗</span>Calculators</a>
-                <a class="nav-link" href="challenges.html"><span class="nav-icon">★</span>Savings Challenges</a>
-            </nav>
             <div class="nav-label nav-label-spaced">Resources</div>
             <nav class="nav-list">
                 <a class="nav-link" href="guides.html"><span class="nav-icon">▧</span>Financial Guides</a>
@@ -141,6 +135,10 @@
                     </section>
                 </div>
 
+                <section class="panel welcome-guide" style="margin-bottom:18px">
+                    <div class="welcome-guide-copy"><span class="pill">NEW USER?</span><h2 style="margin-top:10px">Learn how to use Wealthness</h2><p class="panel-subtitle">A quick walkthrough of the tools that help you track spending, plan savings, and understand your finances.</p></div>
+                    <button class="btn btn-primary" type="button" id="open-user-guide">How to use Wealthness →</button>
+                </section>
                 <section class="grid stats-grid">
                     <article class="stat-card">
                         <div class="stat-top">
@@ -247,6 +245,17 @@
                     </div>
                     <div class="grid stats-grid" id="spending-insights"></div>
                 </section>
+                <section class="panel" style="margin-bottom:18px">
+                    <div class="panel-heading"><div><h2>Financial health overview</h2><p class="panel-subtitle">A simple estimate based on the records saved in this browser.</p></div><span class="pill">Educational estimate</span></div>
+                    <div class="grid stats-grid" id="health-stats"></div>
+                    <div class="grid equal-col">
+                        <article class="health-tip-panel"><h3>Cash flow</h3><div id="health-cashflow" style="margin-top:12px"></div></article>
+                        <article class="health-tip-panel"><h3>Savings progress</h3><div id="health-savings" class="category-list" style="margin-top:12px"></div></article>
+                        <article class="health-tip-panel"><h3>Debt overview</h3><div id="health-debt" style="margin-top:12px"></div></article>
+                        <article class="health-tip-panel"><h3>Financial summary</h3><div id="health-summary" class="category-list" style="margin-top:12px"></div></article>
+                    </div>
+                    <div style="margin-top:16px"><h3>Suggestions to consider</h3><div id="health-tips" class="category-list" style="margin-top:10px"></div></div>
+                </section>
                 <section class="panel">
                     <div class="panel-heading">
                         <div>
@@ -275,6 +284,20 @@
         </div>
     </div>
 
+    <div class="modal-backdrop hidden" id="user-guide-modal" role="dialog" aria-modal="true" aria-labelledby="user-guide-title">
+        <section class="modal-card guide-modal">
+            <div class="panel-heading"><div><div class="eyebrow">QUICK START</div><h2 id="user-guide-title">How to use Wealthness</h2><p class="panel-subtitle">Follow these simple steps to get started.</p></div><button type="button" class="modal-close" id="close-user-guide" aria-label="Close guide">×</button></div>
+            <ol class="guide-steps">
+                <li><strong>Start at the Dashboard</strong><span>Check your available balance, monthly income, spending, cash flow, and financial health overview.</span></li>
+                <li><strong>Record your money activity</strong><span>Open Budget &amp; Expenses to add income and expenses. Use categories and monthly limits to organize spending.</span></li>
+                <li><strong>Plan your savings</strong><span>In Savings Goals, create a target, use the calculators, and track your progress. You can also try a savings challenge.</span></li>
+                <li><strong>Track what you owe</strong><span>Use Debt Management to record balances and payments, then check due dates in the Financial Calendar.</span></li>
+                <li><strong>Learn and personalize</strong><span>Read Financial Guides for basic money tips. Open Settings to change the theme or back up your records.</span></li>
+            </ol>
+            <div class="notice">Your records are saved in this browser. This student project does not connect to real bank or e-wallet accounts. Export a backup regularly, especially before clearing browser data.</div>
+            <div class="form-actions"><button type="button" class="btn btn-primary" id="finish-user-guide">Got it, let's start</button></div>
+        </section>
+    </div>
     <div id="toast" class="success-message hidden" role="status" aria-live="polite" style="position:fixed;right:20px;bottom:20px;z-index:50;box-shadow:var(--shadow)"></div>
 </body>
 </html>
