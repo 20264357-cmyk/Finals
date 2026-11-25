@@ -1,0 +1,609 @@
+
+const STORAGE_KEY = "wealthnessData_v2";
+
+const money = n => new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP",maximumFractionDigits:2}).format(Number(n)||0);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = () => "w_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const escapeHTML = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const defaultData = () => ({
+    transactions:[],
+    budgets:{},
+    goals:[],
+    debts:[],
+    accounts:[],
+    planner:{income:"",essential:"",rate:20,goal:"",months:12},
+    settings:{name:"",currency:"PHP"}
+});
+
+function loadData(){
+    try {
+        const raw=JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return {
+            ...defaultData(),
+            ...(raw||{}),
+            settings:{...defaultData().settings,...(raw?.settings||{})},
+            planner:{...defaultData().planner,...(raw?.planner||{})}
+        };
+    }
+    catch(e){
+        return defaultData();
+    }
+}
+
+let data=loadData();
+
+function save(){
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+
+function byId(id){
+    return document.getElementById(id);
+}
+
+function val(id){
+    return byId(id)?.value?.trim() ?? "";
+}
+
+function setText(id,text){
+    if(byId(id))byId(id).textContent=text;
+}
+
+function monthKey(date){
+    return String(date||"").slice(0,7);
+}
+
+function currentMonth(){
+    return todayISO().slice(0,7);
+}
+
+function monthTransactions(){
+    return data.transactions.filter(t=>monthKey(t.date)===currentMonth());
+}
+
+function sum(items,fn){
+    return items.reduce((a,x)=>a+(Number(fn(x))||0),0);
+}
+
+function totals(items){
+    return {
+        income:sum(items,t=>t.type==="income"?t.amount:0),
+        expense:sum(items,t=>t.type==="expense"?t.amount:0)
+    };
+}
+
+function availableBalance(){
+    const t=totals(data.transactions);
+    return t.income-t.expense;
+}
+
+function categoryName(t){
+    return t.category||"Others";
+}
+
+function toast(message){
+    const el=byId("toast");
+    if(!el)return;
+    el.textContent=message;
+    el.classList.remove("hidden");
+    clearTimeout(toast.timer);
+    toast.timer=setTimeout(()=>el.classList.add("hidden"),2800);
+}
+
+function renderOverview(){
+    const all=totals(data.transactions),m=totals(monthTransactions());
+
+    setText("available-balance",money(all.income-all.expense));
+    setText("monthly-income",money(m.income));
+    setText("monthly-spending",money(m.expense));
+    setText("total-saved",money(sum(data.goals,g=>g.saved)));
+    setText("current-date",new Date().toLocaleDateString("en-PH",{weekday:"long",year:"numeric",month:"long",day:"numeric"}));
+
+    const recent=[...data.transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+    const tbody=byId("recent-transactions");
+
+    if(tbody)tbody.innerHTML=recent.length?recent.map(t=>`<tr><td>${escapeHTML(t.date)}</td><td>${escapeHTML(t.description)}</td><td>${escapeHTML(categoryName(t))}</td><td><span class="pill ${t.type==="income"?"":"neutral"}">${t.type}</span></td><td class="${t.type==="income"?"amount-income":"amount-expense"}">${t.type==="income"?"+":"−"}${money(t.amount)}</td></tr>`).join(""):`<tr><td colspan="5"><div class="empty-state">No transactions yet. Add your first entry in Budget & Expenses.</div></td></tr>`;
+
+    renderChart();
+    renderSpending();
+    renderOverviewGoals();
+
+    const planned=Number(data.planner.rate??20);
+    const income=Number(data.planner.income)||m.income;
+    setText("overview-saving-suggestion",money(income*planned/100));
+}
+
+function renderChart(){
+    const el=byId("cashflow-chart");
+    if(!el)return;
+
+    const now=new Date(),months=[];
+
+    for(let i=5;i>=0;i--){
+        const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+        const key=d.toISOString().slice(0,7);
+        const tx=data.transactions.filter(t=>monthKey(t.date)===key);
+        const t=totals(tx);
+        months.push({label:d.toLocaleDateString("en",{month:"short"}),...t});
+    }
+
+    const max=Math.max(1,...months.flatMap(m=>[m.income,m.expense]));
+
+    el.innerHTML=months.map(m=>`<div class="chart-month"><div class="chart-bars"><div class="chart-bar" title="Income ${money(m.income)}" style="height:${Math.max(3,m.income/max*100)}%"></div><div class="chart-bar expense" title="Expenses ${money(m.expense)}" style="height:${Math.max(3,m.expense/max*100)}%"></div></div><span class="chart-label">${m.label}</span></div>`).join("");
+}
+
+function renderSpending(){
+    const el=byId("spending-overview");
+    if(!el)return;
+
+    const expenses=monthTransactions().filter(t=>t.type==="expense");
+    const total=sum(expenses,t=>t.amount);
+    const groups={};
+
+    expenses.forEach(t=>groups[categoryName(t)]=(groups[categoryName(t)]||0)+Number(t.amount));
+
+    const sorted=Object.entries(groups).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+    el.innerHTML=sorted.length?sorted.map(([name,amount])=>`<div class="category-row"><span class="category-name">${escapeHTML(name)}</span><span class="category-amount">${money(amount)}</span><div class="progress-track"><div class="progress-fill" style="width:${total?amount/total*100:0}%"></div></div></div>`).join(""):`<div class="empty-state">Your spending categories will appear here once you add expenses.</div>`;
+}
+
+function renderOverviewGoals(){
+    const el=byId("savings-overview");
+    if(!el)return;
+
+    const goals=data.goals.slice(0,3);
+
+    el.innerHTML=goals.length?goals.map(g=>`<div class="category-row"><span class="category-name">${escapeHTML(g.name)}</span><span class="category-amount">${Math.min(100,Math.round(g.saved/Math.max(1,g.target)*100))}%</span><div class="progress-track"><div class="progress-fill" style="width:${Math.min(100,g.saved/Math.max(1,g.target)*100)}%"></div></div></div>`).join(""):`<div class="empty-state">Create a savings goal to start tracking your progress.</div>`;
+}
+
+function renderBudget(){
+    const list=byId("transaction-list");
+    if(!list)return;
+
+    const search=(val("budget-search")||"").toLowerCase(),type=val("type-filter");
+
+    const filtered=[...data.transactions].filter(t=>(!type||t.type===type)&&(`${t.description} ${t.category} ${t.date}`.toLowerCase().includes(search))).sort((a,b)=>b.date.localeCompare(a.date));
+
+    list.innerHTML=filtered.length?filtered.map(t=>`<tr><td>${escapeHTML(t.date)}</td><td>${escapeHTML(t.description)}</td><td>${escapeHTML(categoryName(t))}</td><td><span class="pill ${t.type==="income"?"":"neutral"}">${t.type}</span></td><td class="${t.type==="income"?"amount-income":"amount-expense"}">${t.type==="income"?"+":"−"}${money(t.amount)}</td><td><button class="btn btn-secondary btn-small" data-edit-tx="${t.id}">Edit</button> <button class="btn btn-danger btn-small" data-delete-tx="${t.id}">Delete</button></td></tr>`).join(""):`<tr><td colspan="6"><div class="empty-state">No matching transactions found.</div></td></tr>`;
+
+    const m=totals(monthTransactions());
+    setText("transaction-count",String(data.transactions.length));
+    setText("budget-income-total",money(m.income));
+    setText("budget-expense-total",money(m.expense));
+    setText("budget-balance-total",money(m.income-m.expense));
+
+    renderBudgets();
+}
+
+function renderBudgets(){
+    const el=byId("budget-limits");
+    if(!el)return;
+
+    const categories=["Housing","Food","Transportation","Education","Bills","Personal","Others"];
+
+    el.innerHTML=categories.map(cat=>{
+        const limit=Number(data.budgets[cat])||0;
+        const spent=sum(monthTransactions().filter(t=>t.type==="expense"&&t.category===cat),t=>t.amount);
+        const pct=limit?Math.min(100,spent/limit*100):0;
+        return `<div class="category-row"><span class="category-name">${cat}</span><span class="category-amount">${money(spent)} / ${limit?money(limit):"No limit"}</span><div class="progress-track"><div class="progress-fill ${pct>=100?"danger":pct>=80?"warning":""}" style="width:${pct}%"></div></div><div style="grid-column:1/-1"><button class="btn btn-secondary btn-small" data-budget="${cat}">Set limit</button></div></div>`
+    }).join("");
+}
+
+function resetTransactionForm(){
+    const f=byId("transaction-form");
+    if(!f)return;
+    f.reset();
+    byId("transaction-id").value="";
+    byId("transaction-date").value=todayISO();
+    setText("form-heading","Add a transaction");
+    setText("save-entry-button","Save transaction");
+    byId("cancel-edit-button")?.classList.add("hidden");
+}
+
+function handleTransactionSubmit(e){
+    e.preventDefault();
+
+    const id=val("transaction-id"),type=val("transaction-type"),description=val("transaction-description"),category=val("transaction-category"),amount=Number(val("transaction-amount")),date=val("transaction-date");
+
+    if(!description||!category||!date||!Number.isFinite(amount)||amount<=0){
+        toast("Please complete all fields with a valid amount.");
+        return;
+    }
+
+    const item={id:id||uid(),type,description,category,amount,date};
+
+    if(id){
+        data.transactions=data.transactions.map(t=>t.id===id?item:t)
+    }else data.transactions.push(item);
+
+    save();
+    resetTransactionForm();
+    refresh();
+
+    const modal=byId("quick-entry-modal");
+    if(modal){
+        modal.classList.add("hidden");
+        document.body.classList.remove("modal-open")
+    }
+
+    toast(id?"Transaction updated.":"Transaction saved.");
+}
+
+function editTransaction(id){
+    const t=data.transactions.find(x=>x.id===id);
+    if(!t)return;
+
+    byId("transaction-id").value=t.id;
+    byId("transaction-type").value=t.type;
+    byId("transaction-description").value=t.description;
+    byId("transaction-category").value=t.category;
+    byId("transaction-amount").value=t.amount;
+    byId("transaction-date").value=t.date;
+    setText("form-heading","Edit transaction");
+    setText("save-entry-button","Update transaction");
+    byId("cancel-edit-button")?.classList.remove("hidden");
+    byId("transaction-form").scrollIntoView({behavior:"smooth",block:"center"})
+}
+
+function renderSavings(){
+    const el=byId("goals-list");
+    if(!el)return;
+
+    el.innerHTML=data.goals.length?data.goals.map(g=>{
+        const pct=Math.min(100,g.saved/Math.max(1,g.target)*100);
+        return `<article class="goal-card"><div class="goal-top"><div class="goal-emoji">${escapeHTML(g.emoji||"🎯")}</div><span class="pill">${Math.round(pct)}% complete</span></div><h3 style="margin-top:12px">${escapeHTML(g.name)}</h3><div class="goal-amount">${money(g.saved)} <span style="font-size:11px;color:var(--muted);font-weight:500">of ${money(g.target)}</span></div><div class="goal-progress"><span style="width:${pct}%"></span></div><div class="goal-meta">${money(Math.max(0,g.target-g.saved))} remaining</div><div class="goal-actions"><button class="btn btn-primary btn-small" data-add-goal="${g.id}">Add savings</button><button class="btn btn-secondary btn-small" data-edit-goal="${g.id}">Edit</button><button class="btn btn-danger btn-small" data-delete-goal="${g.id}">Delete</button></div></article>`
+    }).join(""):`<div class="empty-state" style="grid-column:1/-1">No savings goals yet. Create your first goal above.</div>`;
+
+    updatePlanner();
+}
+
+function updatePlanner(){
+    const income=Number(data.planner.income)||totals(monthTransactions()).income;
+    const essential=Number(data.planner.essential)||sum(monthTransactions().filter(t=>t.type==="expense"&&["Housing","Food","Transportation","Education","Bills"].includes(t.category)),t=>t.amount);
+    const debt=sum(data.debts,d=>Number(d.remaining)||0);
+    const rate=Number(data.planner.rate??20),suggested=income*rate/100,remaining=income-essential-suggested;
+
+    setText("planner-suggested",money(suggested));
+    setText("planner-suggested-copy",money(suggested));
+    setText("planner-income-display",money(income));
+    setText("planner-expense-display",money(essential));
+    setText("planner-remaining",money(remaining));
+
+    const target=Number(data.planner.goal)||0,months=Math.max(1,Number(data.planner.months)||12);
+
+    setText("planner-monthly-goal",money(target/months));
+    setText("emergency-target-low",money(essential*3));
+    setText("emergency-target-high",money(essential*6));
+    setText("planner-debt-total",money(debt));
+}
+
+function renderDebt(){
+    const el=byId("debt-list");
+    if(!el)return;
+
+    el.innerHTML=data.debts.length?data.debts.map(d=>{
+        const pct=d.original?Math.min(100,(d.original-d.remaining)/d.original*100):0;
+        return `<div class="goal-card"><div class="goal-top"><div><h3>${escapeHTML(d.name)}</h3><div class="goal-meta">${escapeHTML(d.due||"No due date")} · ${escapeHTML(d.type||"Debt")}</div></div><span class="pill ${d.remaining===0?"":"warning"}">${d.remaining===0?"Paid":"In progress"}</span></div><div class="goal-amount">${money(d.remaining)} <span style="font-size:11px;color:var(--muted);font-weight:500">remaining of ${money(d.original)}</span></div><div class="goal-progress"><span style="width:${pct}%"></span></div><div class="goal-meta">${Math.round(pct)}% repaid</div><div class="goal-actions"><button class="btn btn-primary btn-small" data-pay-debt="${d.id}" ${d.remaining<=0?"disabled":""}>Record payment</button><button class="btn btn-secondary btn-small" data-edit-debt="${d.id}">Edit</button><button class="btn btn-danger btn-small" data-delete-debt="${d.id}">Delete</button></div></div>`
+    }).join(""):`<div class="empty-state" style="grid-column:1/-1">No debts recorded. Add a debt to monitor repayment progress.</div>`;
+
+    setText("debt-total",money(sum(data.debts,d=>d.remaining)));
+}
+
+function refresh(){
+    renderOverview();
+    renderBudget();
+    renderSavings();
+    renderDebt();
+    renderSettings();
+}
+
+function renderSettings(){
+    const el=byId("accounts-list");
+    if(!el)return;
+
+    el.innerHTML=data.accounts.length?data.accounts.map(a=>`<div class="account-card"><div class="account-left"><div class="account-logo">${escapeHTML(a.provider.slice(0,2).toUpperCase())}</div><div><strong>${escapeHTML(a.label)}</strong><div class="goal-meta">${escapeHTML(a.provider)} · ${escapeHTML(a.status)}</div></div></div><button class="btn btn-danger btn-small" data-disconnect="${a.id}">Remove</button></div>`).join(""):`<div class="empty-state">No accounts added yet. You can add a demo account below.</div>`;
+
+    if(byId("profile-name"))byId("profile-name").value=data.settings.name||"";
+}
+
+function initPage(){
+    const page=document.body.dataset.page;
+
+    if(byId("transaction-date"))byId("transaction-date").value=todayISO();
+    if(byId("planner-income"))byId("planner-income").value=data.planner.income||"";
+    if(byId("planner-essential"))byId("planner-essential").value=data.planner.essential||"";
+    if(byId("planner-rate"))byId("planner-rate").value=data.planner.rate??20;
+    if(byId("planner-goal"))byId("planner-goal").value=data.planner.goal||"";
+    if(byId("planner-months"))byId("planner-months").value=data.planner.months||12;
+
+    if(byId("transaction-form"))byId("transaction-form").addEventListener("submit",handleTransactionSubmit);
+
+    const quickModal=byId("quick-entry-modal");
+    const closeQuickModal=()=>{
+        quickModal?.classList.add("hidden");
+        document.body.classList.remove("modal-open")
+    };
+
+    byId("open-add-entry")?.addEventListener("click",()=>{
+        quickModal?.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+        byId("transaction-date").value=todayISO();
+        byId("transaction-description").focus()
+    });
+
+    byId("close-add-entry")?.addEventListener("click",closeQuickModal);
+    byId("cancel-quick-entry")?.addEventListener("click",closeQuickModal);
+    quickModal?.addEventListener("click",e=>{
+        if(e.target===quickModal)closeQuickModal()
+    });
+    document.addEventListener("keydown",e=>{
+        if(e.key==="Escape")closeQuickModal()
+    });
+
+    byId("cancel-edit-button")?.addEventListener("click",resetTransactionForm);
+    byId("budget-search")?.addEventListener("input",renderBudget);
+    byId("type-filter")?.addEventListener("change",renderBudget);
+
+    byId("goal-form")?.addEventListener("submit",e=>{
+        e.preventDefault();
+        const name=val("goal-name"),target=Number(val("goal-target"));
+
+        if(!name||target<=0){
+            toast("Enter a goal name and valid target.");
+            return
+        }
+
+        data.goals.push({id:uid(),name,target,saved:0,emoji:val("goal-emoji")||"🎯"});
+        save();
+        e.target.reset();
+        refresh();
+        toast("Savings goal created.")
+    });
+
+    byId("planner-form")?.addEventListener("input",()=>{
+        data.planner={
+            income:val("planner-income"),
+            essential:val("planner-essential"),
+            rate:Number(val("planner-rate"))||0,
+            goal:val("planner-goal"),
+            months:Number(val("planner-months"))||12
+        };
+        save();
+        setText("planner-rate-value",(Number(val("planner-rate"))||0)+"%");
+        updatePlanner()
+    });
+
+    byId("debt-form")?.addEventListener("submit",e=>{
+        e.preventDefault();
+        const name=val("debt-name"),original=Number(val("debt-amount"));
+
+        if(!name||original<=0){
+            toast("Enter a debt name and valid amount.");
+            return
+        }
+
+        data.debts.push({id:uid(),name,original,remaining:original,due:val("debt-due"),type:val("debt-type")||"Personal"});
+        save();
+        e.target.reset();
+        refresh();
+        toast("Debt added.")
+    });
+
+    byId("account-form")?.addEventListener("submit",e=>{
+        e.preventDefault();
+        const provider=val("account-provider"),label=val("account-label");
+
+        if(!provider||!label){
+            toast("Choose a provider and enter an account label.");
+            return
+        }
+
+        data.accounts.push({id:uid(),provider,label,status:"Demo connected"});
+        save();
+        e.target.reset();
+        refresh();
+        toast("Demo account added. No live connection was made.")
+    });
+
+    byId("profile-form")?.addEventListener("submit",e=>{
+        e.preventDefault();
+        data.settings.name=val("profile-name");
+        save();
+        toast("Settings saved.")
+    });
+
+    document.addEventListener("click",e=>{
+        const b=e.target.closest("button");
+        if(!b)return;
+
+        if(b.dataset.editTx)editTransaction(b.dataset.editTx);
+
+        if(b.dataset.deleteTx&&confirm("Delete this transaction?")){
+            data.transactions=data.transactions.filter(t=>t.id!==b.dataset.deleteTx);
+            save();
+            refresh();
+            toast("Transaction deleted.")
+        }
+
+        if(b.dataset.budget){
+            const cat=b.dataset.budget;
+            const current=data.budgets[cat]||"";
+            const answer=prompt(`Monthly spending limit for ${cat} (₱):`,current);
+
+            if(answer!==null){
+                const n=Number(answer);
+                if(!Number.isFinite(n)||n<0){
+                    toast("Enter a valid limit.");
+                    return
+                }
+                data.budgets[cat]=n;
+                save();
+                renderBudget();
+            }
+        }
+
+        if(b.dataset.addGoal){
+            const g=data.goals.find(x=>x.id===b.dataset.addGoal);
+            const amount=Number(prompt(`How much would you like to add to ${g.name}? (₱)`));
+
+            if(amount>0){
+                g.saved+=amount;
+                save();
+                refresh();
+                toast("Savings contribution added.")
+            }
+        }
+
+        if(b.dataset.editGoal){
+            const g=data.goals.find(x=>x.id===b.dataset.editGoal);
+            const name=prompt("Goal name:",g.name);
+            if(name===null)return;
+
+            const target=Number(prompt("Target amount (₱):",g.target));
+
+            if(name.trim()&&target>0){
+                g.name=name.trim();
+                g.target=target;
+                save();
+                refresh();
+            }
+        }
+
+        if(b.dataset.deleteGoal&&confirm("Delete this savings goal?")){
+            data.goals=data.goals.filter(g=>g.id!==b.dataset.deleteGoal);
+            save();
+            refresh();
+        }
+
+        if(b.dataset.payDebt){
+            const d=data.debts.find(x=>x.id===b.dataset.payDebt);
+            const amount=Number(prompt(`Payment amount for ${d.name} (₱):`));
+
+            if(amount>0){
+                d.remaining=Math.max(0,d.remaining-amount);
+                save();
+                refresh();
+                toast("Debt payment recorded.")
+            }
+        }
+
+        if(b.dataset.editDebt){
+            const d=data.debts.find(x=>x.id===b.dataset.editDebt);
+            const name=prompt("Debt name:",d.name);
+
+            if(name!==null&&name.trim()){
+                d.name=name.trim();
+                save();
+                refresh();
+            }
+        }
+
+        if(b.dataset.deleteDebt&&confirm("Delete this debt record?")){
+            data.debts=data.debts.filter(d=>d.id!==b.dataset.deleteDebt);
+            save();
+            refresh();
+        }
+
+        if(b.dataset.disconnect&&confirm("Remove this demo account?")){
+            data.accounts=data.accounts.filter(a=>a.id!==b.dataset.disconnect);
+            save();
+            renderSettings();
+        }
+    });
+
+    byId("export-data")?.addEventListener("click",()=>{
+        const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+        downloadBlob(blob,"wealthness-backup.json")
+    });
+
+    byId("import-json")?.addEventListener("change",async e=>{
+        const file=e.target.files[0];
+        if(!file)return;
+
+        try{
+            const imported=JSON.parse(await file.text());
+            if(!imported||!Array.isArray(imported.transactions))throw Error();
+
+            if(confirm("Replace your current Wealthness data with this backup?")){
+                data={...defaultData(),...imported};
+                save();
+                refresh();
+                toast("Backup restored.")
+            }
+        }catch(err){
+            toast("That backup file is not valid.")
+        }
+
+        e.target.value=""
+    });
+
+    byId("csv-import")?.addEventListener("change",async e=>{
+        const file=e.target.files[0];
+        if(!file)return;
+
+        try{
+            const lines=(await file.text()).trim().split(/\r?\n/);
+            const headers=lines.shift().split(",").map(x=>x.trim().toLowerCase());
+            const idx=k=>headers.indexOf(k);
+
+            if(["date","type","description","category","amount"].some(k=>idx(k)<0))throw Error("headers");
+
+            let added=0;
+
+            lines.forEach(line=>{
+                const cols=line.split(",").map(x=>x.trim().replace(/^"|"$/g,""));
+                const amount=Number(cols[idx("amount")]);
+                const type=cols[idx("type")].toLowerCase();
+
+                if(cols[idx("date")]&&["income","expense"].includes(type)&&cols[idx("description")]&&amount>0){
+                    data.transactions.push({
+                        id:uid(),
+                        date:cols[idx("date")],
+                        type,
+                        description:cols[idx("description")],
+                        category:cols[idx("category")]||"Others",
+                        amount,
+                        source:"CSV import"
+                    });
+                    added++
+                }
+            });
+
+            save();
+            refresh();
+            toast(`${added} transaction(s) imported.`)
+        }catch(err){
+            toast("CSV needs columns: date,type,description,category,amount.")
+        }
+
+        e.target.value=""
+    });
+
+    byId("download-template")?.addEventListener("click",()=>{
+        const csv="date,type,description,category,amount\n2026-11-01,income,Monthly allowance,Others,8000\n2026-11-02,expense,Lunch,Food,150\n";
+        downloadBlob(new Blob([csv],{type:"text/csv"}),"wealthness-transactions-template.csv")
+    });
+
+    const toggle=byId("menu-toggle"),sidebar=byId("sidebar"),overlay=byId("mobile-overlay");
+
+    toggle?.addEventListener("click",()=>{
+        sidebar.classList.toggle("open");
+        overlay.classList.toggle("show")
+    });
+
+    overlay?.addEventListener("click",()=>{
+        sidebar.classList.remove("open");
+        overlay.classList.remove("show")
+    });
+
+    refresh();
+}
+
+function downloadBlob(blob,name){
+    const a=document.createElement("a"),url=URL.createObjectURL(blob);
+    a.href=url;
+    a.download=name;
+    a.click();
+    URL.revokeObjectURL(url)
+}
+
+document.addEventListener("DOMContentLoaded",initPage);
