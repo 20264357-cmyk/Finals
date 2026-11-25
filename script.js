@@ -485,6 +485,13 @@ function initPage(){
 
     if(byId("transaction-form"))byId("transaction-form").addEventListener("submit",handleTransactionSubmit);
 
+    const guideModal=byId("user-guide-modal");
+    const closeGuide=()=>{guideModal?.classList.add("hidden");document.body.classList.remove("modal-open")};
+    byId("open-user-guide")?.addEventListener("click",()=>{guideModal?.classList.remove("hidden");document.body.classList.add("modal-open");byId("close-user-guide")?.focus()});
+    byId("close-user-guide")?.addEventListener("click",closeGuide);
+    byId("finish-user-guide")?.addEventListener("click",closeGuide);
+    guideModal?.addEventListener("click",e=>{if(e.target===guideModal)closeGuide()});
+
     const quickModal=byId("quick-entry-modal");
     const closeQuickModal=()=>{
         quickModal?.classList.add("hidden");
